@@ -3,5 +3,10 @@
   "menu": "Menu",
   "offers": "Offers",
   "language": "Language",
-  "login": "Login"
+  "login": "Login",
+  "usefulLink": "Useful Links",
+  "aboutUs": "About Us",
+  "contactUs": "Contact Us",
+  "terms": "Terms & Conditions",
+  "privacy": "Privacy Policy"
 }

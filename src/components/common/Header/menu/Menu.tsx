@@ -3,11 +3,10 @@
 import { useLanguage } from "@/app/context/LanguageContext";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
 
 const Menu = () => {
   const pathname = usePathname();
-  const { lang, setLang, t } = useLanguage();
+  const { t } = useLanguage();
 
   const menuItems = [
     { link: "/", name: t("home") },
@@ -24,8 +23,8 @@ const Menu = () => {
             key={index}
             className={`${
               isActive
-                ? "text-[var(--primary-color)]"
-                : "text-gray-700 hover:text-[var(--primary-color)]"
+                ? "text-(--primary-color)"
+                : "text-gray-700 hover:text-(--primary-color)"
             } transition-colors font-semibold`}
           >
             <Link href={item.link}>{item.name}</Link>

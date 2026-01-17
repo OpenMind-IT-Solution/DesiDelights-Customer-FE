@@ -1,3 +1,5 @@
+"use client";
+import { useLanguage } from "@/app/context/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
 import { BsInstagram, BsWhatsapp } from "react-icons/bs";
@@ -5,6 +7,7 @@ import { FaFacebook } from "react-icons/fa6";
 import { LiaHeadphonesSolid } from "react-icons/lia";
 import { TfiEmail } from "react-icons/tfi";
 const Footer = () => {
+  const { t } = useLanguage();
   return (
     <footer className="py-10 bg-gray-100">
       <div className="container mx-auto">
@@ -31,26 +34,26 @@ const Footer = () => {
             </Link>
           </div>
           <div className="w-1/3">
-            <h3 className="font-bold pb-4 text-xl">Useful Links:</h3>
+            <h3 className="font-bold pb-4 text-xl">{t("usefulLink")}:</h3>
             <ul className="flex flex-col">
               <li className="pb-2">
                 <Link className="hover:text-(--primary-color)" href={"#"}>
-                  About Us
+                  {t("aboutUs")}
                 </Link>
               </li>
               <li className="pb-2">
                 <Link className="hover:text-(--primary-color)" href={"#"}>
-                  Contact Us
+                  {t("contactUs")}
                 </Link>
               </li>
               <li className="pb-2">
                 <Link className="hover:text-(--primary-color)" href={"#"}>
-                  Terms & Conditions
+                  {t("terms")}
                 </Link>
               </li>
               <li className="pb-2">
                 <Link className="hover:text-(--primary-color)" href={"#"}>
-                  Privacy Policy
+                  {t("privacy")}
                 </Link>
               </li>
             </ul>
