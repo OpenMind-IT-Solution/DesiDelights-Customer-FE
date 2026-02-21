@@ -1,11 +1,13 @@
 "use client";
-
+import { useLanguage } from "@/app/context/LanguageContext";
 import Image from "next/image";
 import { FaInfoCircle } from "react-icons/fa";
 import { PiBagSimpleFill } from "react-icons/pi";
 import Button from "../common/Button/Button";
 
 const FeaturedItems = () => {
+  const { t } = useLanguage();
+
   const featuredItems = [
     {
       id: 1,
@@ -102,8 +104,7 @@ const FeaturedItems = () => {
   return (
     <section className="py-10 md:py-14">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-black mb-6">Featured Items</h2>
-
+        <h2 className="text-3xl font-black mb-6">{t("featuredItems")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {featuredItems.map((item) => (
             <div
@@ -131,7 +132,7 @@ const FeaturedItems = () => {
                 )}
               </div>
 
-              <div className="p-4 flex flex-col flex-grow">
+              <div className="p-4 flex flex-col grow">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="text-base font-semibold line-clamp-1">
                     {item.name}
@@ -144,7 +145,7 @@ const FeaturedItems = () => {
                 </p>
 
                 <div className="flex items-center justify-between mt-auto">
-                  <span className="text-[var(--primary-color)] font-semibold text-sm">
+                  <span className="text-(--primary-color) font-semibold text-sm">
                     {item.price}
                   </span>
 
