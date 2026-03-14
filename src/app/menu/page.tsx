@@ -1,5 +1,11 @@
-const Page = () => {
-  return <div>Page</div>;
-};
+import MenuSection from "@/components/MenuSection/MenuSection";
+import FeaturedItems from "@/components/FeaturedItems/FeaturedItems";
 
-export default Page;
+export default function MenuPage() {
+  return (
+    <>
+      <MenuSection />
+      <FeaturedItems />
+    </>
+  );
+}

@@ -1,85 +1,108 @@
 "use client";
-import { useLanguage } from "@/app/context/LanguageContext";
+
+import {useLanguage} from "@/app/context/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
-import { BsInstagram, BsWhatsapp } from "react-icons/bs";
-import { FaFacebook } from "react-icons/fa6";
-import { LiaHeadphonesSolid } from "react-icons/lia";
-import { TfiEmail } from "react-icons/tfi";
+import {BsInstagram, BsWhatsapp} from "react-icons/bs";
+import {FaFacebook} from "react-icons/fa6";
+import {LiaHeadphonesSolid} from "react-icons/lia";
+import {TfiEmail} from "react-icons/tfi";
+
 const Footer = () => {
-  const { t } = useLanguage();
+  const {t} = useLanguage();
+
   return (
-    <footer className="py-10 bg-gray-100">
-      <div className="container mx-auto">
-        <div className="flex flex-col md:flex-row">
-          <div className="w-1/3 text-lg">
+    <footer className="bg-gray-100 border-t border-gray-200 pt-16 pb-8">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          <div>
             <Image
-              className="max-h-20 max-w-36 object-contain mb-2 object-left"
               src={"/images/logo.png"}
               width={150}
               height={80}
               alt="Logo"
+              className="mb-4"
             />
-            <Link
-              className="flex items-center gap-2 font-semibold py-2 hover:text-(--primary-color)"
-              href={"mailto:info@desidelights.com"}
-            >
-              <TfiEmail /> info@desidelights.com
-            </Link>
-            <Link
-              className="flex items-center gap-2 font-semibold py-2 hover:text-(--primary-color)"
-              href={"tel:+3232232232"}
-            >
-              <LiaHeadphonesSolid /> +32 332 556 2224
-            </Link>
+
+            <div className="flex gap-3 mt-6">
+              <Link
+                href=""
+                className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
+              >
+                <FaFacebook />
+              </Link>
+
+              <Link
+                href=""
+                className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
+              >
+                <BsInstagram />
+              </Link>
+
+              <Link
+                href=""
+                className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
+              >
+                <BsWhatsapp />
+              </Link>
+            </div>
           </div>
-          <div className="w-1/3">
-            <h3 className="font-bold pb-4 text-xl">{t("usefulLink")}:</h3>
-            <ul className="flex flex-col">
-              <li className="pb-2">
-                <Link className="hover:text-(--primary-color)" href={"#"}>
+
+          <div>
+            <h3 className="font-bold text-lg mb-4">{t("usefulLink")}</h3>
+
+            <ul className="space-y-2 text-gray-600">
+              <li>
+                <Link
+                  className="hover:text-[var(--primary-color)]"
+                  href="/about"
+                >
                   {t("aboutUs")}
                 </Link>
               </li>
-              <li className="pb-2">
+              <li>
                 <Link className="hover:text-(--primary-color)" href={"#"}>
                   {t("contactUs")}
                 </Link>
               </li>
-              <li className="pb-2">
+
+              <li>
                 <Link className="hover:text-(--primary-color)" href={"#"}>
                   {t("terms")}
                 </Link>
               </li>
-              <li className="pb-2">
+
+              <li>
                 <Link className="hover:text-(--primary-color)" href={"#"}>
                   {t("privacy")}
                 </Link>
               </li>
             </ul>
           </div>
-          <div className="w-1/3">
-            <div className="flex flex-col gap-3">
-              <h3 className="font-bold pb-4 text-xl">Follow us on: </h3>
-              <ul className="flex flex-wrap gap-3 mb-4">
-                <li className="p-3 border border-(--primary-color) rounded-full hover:bg-(--primary-color) hover:text-white">
-                  <Link href={""}>
-                    <FaFacebook />
-                  </Link>
-                </li>
-                <li className="p-3 border border-(--primary-color) rounded-full hover:bg-(--primary-color) hover:text-white">
-                  <Link href={""}>
-                    <BsInstagram />
-                  </Link>
-                </li>
-                <li className="p-3 border border-(--primary-color) rounded-full hover:bg-(--primary-color) hover:text-white">
-                  <Link href={""}>
-                    <BsWhatsapp />
-                  </Link>
-                </li>
-              </ul>
-            </div>
+
+          <div>
+            <h3 className="font-bold text-lg mb-4">Contact</h3>
+
+            <Link
+              className="flex items-center gap-3 text-gray-600 mb-3 hover:text-(--primary-color)"
+              href={"mailto:info@desidelights.com"}
+            >
+              <TfiEmail />
+              info@desidelights.com
+            </Link>
+
+            <Link
+              className="flex items-center gap-3 text-gray-600 hover:text-(--primary-color)"
+              href={"tel:+3232232232"}
+            >
+              <LiaHeadphonesSolid />
+              +32 332 556 2224
+            </Link>
           </div>
+        </div>
+
+        <div className="border-t border-gray-200 mt-12 pt-6 text-center text-sm text-gray-500">
+          © {new Date().getFullYear()} Desi Delights. All rights reserved.
         </div>
       </div>
     </footer>
