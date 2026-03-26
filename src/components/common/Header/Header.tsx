@@ -14,7 +14,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 shadow-md py-4 bg-white z-10">
+      <header className="sticky top-0 shadow-md py-4 bg-white z-50">
         <div className="px-20">
           <div className="flex justify-between items-center gap-6">
             <Image src="/images/logo.png" alt="Logo" width={90} height={90} />

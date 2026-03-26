@@ -12,8 +12,9 @@ const CartButton = ({onClick}: Props) => {
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex items-center gap-2 bg-[#2c2c44] text-white px-5 py-2 rounded-full"
+      className="flex items-center gap-2 bg-[#2c2c44] text-white px-5 py-2 rounded-full relative z-50 cursor-pointer"
     >
       <FaShoppingBag />${Number(cartTotal).toFixed(2)}
     </button>

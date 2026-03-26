@@ -1,6 +1,7 @@
 "use client";
 
 import {useLanguage} from "@/app/context/LanguageContext";
+import {useCart} from "@/app/context/CartContext";
 import Image from "next/image";
 import {FaInfoCircle} from "react-icons/fa";
 import {PiBagSimpleFill} from "react-icons/pi";
@@ -12,13 +13,14 @@ type MenuItem = {
   id: number;
   name: string;
   description: string;
-  price: string;
+  price: number;
   image: string;
   type: string;
 };
 
 const FeaturedItems = () => {
   const {t} = useLanguage();
+  const {cartItems, increaseQty, decreaseQty} = useCart();
 
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
@@ -26,45 +28,40 @@ const FeaturedItems = () => {
     {
       id: 1,
       name: "Fried Cheese Wonton",
-      description:
-        "Crispy fried cream cheese wontons filled with cheese, lemon and garlic — served with sweet chili dip.",
-      price: "€2.00",
+      description: "Crispy fried cream cheese wontons...",
+      price: 2.0,
       image: "/images/menu/item1.png",
       type: "veg",
     },
     {
       id: 2,
       name: "Panner Tikka Wrap",
-      description:
-        "Soft tortilla stuffed with marinated panner, onions, and capsicum — grilled to perfection.",
-      price: "€3.20",
+      description: "Soft tortilla stuffed with marinated panner...",
+      price: 3.2,
       image: "/images/menu/panner-wrap.png",
       type: "veg",
     },
     {
       id: 3,
       name: "Veggie Supreme Burger",
-      description:
-        "Loaded with grilled vegetables, lettuce, tomato, cheese, and house sauce in a toasted bun.",
-      price: "€2.80",
+      description: "Loaded with grilled vegetables...",
+      price: 2.8,
       image: "/images/menu/veg-burger.png",
       type: "veg",
     },
     {
       id: 4,
       name: "Crispy Potato Twisters",
-      description:
-        "Spiral-cut crispy potatoes seasoned with house spices and served with spicy mayo.",
-      price: "€1.50",
+      description: "Spiral-cut crispy potatoes...",
+      price: 1.5,
       image: "/images/menu/potato-twisters.png",
       type: "veg",
     },
     {
       id: 5,
       name: "Cheesy Garlic Bread",
-      description:
-        "Oven-baked bread topped with garlic butter, mozzarella, and herbs — soft, crispy, and cheesy.",
-      price: "€2.50",
+      description: "Oven-baked bread with garlic butter...",
+      price: 2.5,
       image: "/images/menu/garlic-bread.png",
       type: "veg",
     },
@@ -76,55 +73,67 @@ const FeaturedItems = () => {
         <h2 className="text-3xl font-black mb-8">{t("featuredItems")}</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {featuredItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-white shadow-sm rounded-2xl overflow-hidden border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
-            >
-              <div className="relative w-full h-40 bg-gray-100">
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  fill
-                  sizes="(max-width:768px) 100vw, 300px"
-                  className="object-cover"
-                />
-              </div>
+          {featuredItems.map((item) => {
+            const cartItem = cartItems.find((i) => i.id === item.id);
 
-              <div className="p-4 flex flex-col grow">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-base font-semibold line-clamp-1">
-                    {item.name}
-                  </h3>
-
-                  <FaInfoCircle
-                    onClick={() => setSelectedItem(item)}
-                    className="text-gray-400 text-sm cursor-pointer"
+            return (
+              <div
+                key={item.id}
+                className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
+              >
+                <div className="relative w-full h-40 bg-gray-100">
+                  <Image
+                    src={item.image}
+                    alt={item.name}
+                    fill
+                    className="object-cover"
                   />
                 </div>
 
-                <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                  {item.description}
-                </p>
+                <div className="p-4 flex flex-col grow">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">{item.name}</h3>
+                    <FaInfoCircle
+                      onClick={() => setSelectedItem(item)}
+                      className="cursor-pointer text-gray-400"
+                    />
+                  </div>
 
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="text-[var(--primary-color)] font-semibold text-sm">
-                    {item.price}
-                  </span>
+                  <p className="text-sm text-gray-600 mb-3">
+                    {item.description}
+                  </p>
 
-                  <Button onClick={() => setSelectedItem(item)}>
-                    <PiBagSimpleFill className="text-sm" /> Add
-                  </Button>
+                  <div className="flex justify-between items-center mt-auto">
+                    <span className="text-[var(--primary-color)] font-semibold">
+                      €{item.price.toFixed(2)}
+                    </span>
+
+                    {/* 🔥 FINAL BUTTON LOGIC */}
+                    {cartItem ? (
+                      <div className="flex items-center gap-2 bg-[var(--primary-color)] text-white px-3 py-1 rounded-full">
+                        <button onClick={() => decreaseQty(item.id)}>-</button>
+                        <span>{cartItem.qty}</span>
+                        <button onClick={() => increaseQty(item.id)}>+</button>
+                      </div>
+                    ) : (
+                      <Button onClick={() => setSelectedItem(item)}>
+                        <PiBagSimpleFill /> Add
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <MenuItemModal
-          item={selectedItem}
-          onClose={() => setSelectedItem(null)}
-        />
+        {/* 🔥 Modal */}
+        {selectedItem && (
+          <MenuItemModal
+            item={selectedItem}
+            onClose={() => setSelectedItem(null)}
+          />
+        )}
       </div>
     </section>
   );

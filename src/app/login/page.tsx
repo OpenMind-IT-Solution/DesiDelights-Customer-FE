@@ -1,6 +1,10 @@
 "use client";
 
+import Link from "next/link";
+import {useRouter} from "next/navigation";
+
 export default function LoginPage() {
+  const router = useRouter();
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white max-w-md w-full p-10 rounded-2xl shadow-xl">
@@ -30,7 +34,12 @@ export default function LoginPage() {
             Remember Me
           </label>
 
-          <span className="text-[#FA664D] cursor-pointer">Forget Password</span>
+          <Link
+            href={"/forgot-password"}
+            className="text-[#FA664D] cursor-pointer"
+          >
+            Forget Password
+          </Link>
         </div>
 
         <button className="w-full py-3 rounded-full text-white font-semibold bg-[#FA664D] hover:bg-[#e85a43] transition">
@@ -43,10 +52,47 @@ export default function LoginPage() {
           <hr className="flex-1 border-gray-200" />
         </div>
 
-        <button className="w-full py-3 rounded-full border border-[#FA664D] text-[#FA664D] hover:bg-[#FA664D]/10 transition">
-          Login As Guest
+        <button
+          type="button"
+          onClick={() => router.push("/guest-login")}
+          className="w-full py-3 rounded-full border-2 border-[#FA664D] 
+          text-[#FA664D] font-semibold text-lg
+          hover:bg-[#FA664D] hover:text-white 
+          transition-all duration-200 
+          shadow-sm hover:shadow-md 
+          active:scale-[0.97]"
+        >
+          Login as Guest
         </button>
       </div>
     </div>
   );
 }
+//  return (
+//     <div className="forgot-password-container">
+//       <div className="forgot-password-form">
+//         <h2>Forgot Password</h2>
+//         <form onSubmit={handleSubmit}>
+//           <div className="form-group">
+//             <label htmlFor="email">Email Address</label>
+//             <input
+//               id="email"
+//               type="email"
+//               value={email}
+//               onChange={(e) => setEmail(e.target.value)}
+//               placeholder="Enter your registered email"
+//               required
+//               disabled={isLoading}
+//             />
+//           </div>
+//           {error && <div className="error-message">{error}</div>}
+//           <button type="submit" disabled={isLoading}>
+//             {isLoading ? "Sending..." : "Send Reset Link"}
+//           </button>
+//         </form>
+//         <p className="back-to-login">
+//           Remember your password? <a href="/login">Back to Login</a>
+//         </p>
+//       </div>
+//     </div>
+//   );

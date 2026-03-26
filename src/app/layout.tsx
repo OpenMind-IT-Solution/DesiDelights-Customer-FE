@@ -1,9 +1,8 @@
-import Footer from "@/components/common/Footer/Footer";
-import Header from "@/components/common/Header/Header";
 import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import {LanguageProvider} from "./context/LanguageContext";
 import {CartProvider} from "./context/CartContext";
+import LayoutWrapper from "@/components/LayoutWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,9 +28,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       >
         <LanguageProvider>
           <CartProvider>
-            <Header />
-            {children}
-            <Footer />
+            <LayoutWrapper>{children}</LayoutWrapper>
           </CartProvider>
         </LanguageProvider>
       </body>

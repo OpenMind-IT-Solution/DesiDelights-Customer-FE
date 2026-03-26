@@ -9,7 +9,7 @@ type Item = {
   id: number;
   name: string;
   description: string;
-  price: string;
+  price: number;
   image: string;
 };
 
@@ -40,17 +40,18 @@ const MenuItemModal = ({item, onClose}: Props) => {
 
   if (!item) return null;
 
-  const basePrice = parseFloat(item.price.replace("€", ""));
+  const basePrice = item.price;
   const totalPrice = (basePrice * qty).toFixed(2);
 
   const handleAddToCart = () => {
-    addToCart({
-      id: item.id,
-      name: item.name,
-      price: basePrice,
-      image: item.image,
-      qty: qty,
-    });
+    for (let i = 0; i < qty; i++) {
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        image: item.image,
+      });
+    }
 
     onClose();
   };
