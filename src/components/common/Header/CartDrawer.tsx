@@ -4,15 +4,22 @@ import {useCart} from "@/app/context/CartContext";
 import Image from "next/image";
 import {FaMinus, FaPlus, FaTimes, FaTrash} from "react-icons/fa";
 import {useRouter} from "next/navigation";
+import {useState} from "react";
 
 type Props = {
   show: boolean;
   onClose: () => void;
 };
 
+const HEADER_HEIGHT = 80; // 🔥 adjust based on your navbar height
+
 const CartDrawer = ({show, onClose}: Props) => {
   const router = useRouter();
   const {cartItems, increaseQty, decreaseQty, removeItem} = useCart();
+
+  const [orderType, setOrderType] = useState<"delivery" | "takeaway">(
+    "delivery",
+  );
 
   if (!show) return null;
 
@@ -26,27 +33,45 @@ const CartDrawer = ({show, onClose}: Props) => {
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose}></div>
 
       <div
-        className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-xl flex flex-col"
-        onClick={(e) => e.stopPropagation()}
+        className="fixed right-0 w-full max-w-md bg-white z-50 shadow-xl flex flex-col"
+        style={{
+          top: HEADER_HEIGHT,
+          height: `calc(100% - ${HEADER_HEIGHT}px)`,
+        }}
       >
+        {" "}
         <div className="p-5 border-b flex justify-between items-center">
           <h2 className="text-xl font-bold">My Cart</h2>
 
-          <button onClick={onClose} className="text-[var(--primary-color)]">
+          <button onClick={onClose}>
             <FaTimes size={18} />
           </button>
         </div>
+        <div className="p-5">
+          <div className="flex bg-gray-100 p-1 rounded-full w-fit">
+            <button
+              onClick={() => setOrderType("delivery")}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
+                orderType === "delivery"
+                  ? "bg-[var(--primary-color)] text-white shadow"
+                  : "text-gray-600"
+              }`}
+            >
+              Delivery
+            </button>
 
-        <div className="p-5 flex gap-2">
-          <button className="px-5 py-2 rounded-full bg-[var(--primary-color)] text-white">
-            Delivery
-          </button>
-
-          <button className="px-5 py-2 rounded-full bg-gray-200 text-gray-700">
-            Takeaway
-          </button>
+            <button
+              onClick={() => setOrderType("takeaway")}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
+                orderType === "takeaway"
+                  ? "bg-[var(--primary-color)] text-white shadow"
+                  : "text-gray-600"
+              }`}
+            >
+              Takeaway
+            </button>
+          </div>
         </div>
-
         <div className="flex-1 overflow-y-auto px-5">
           {cartItems.map((item) => (
             <div
@@ -71,19 +96,21 @@ const CartDrawer = ({show, onClose}: Props) => {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
                 <button
                   onClick={() => decreaseQty(item.id)}
-                  className="text-[var(--primary-color)] border rounded-full w-7 h-7 flex items-center justify-center"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-white border border-[var(--primary-color)] text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition"
                 >
                   <FaMinus size={10} />
                 </button>
 
-                <span>{item.qty}</span>
+                <span className="font-semibold text-sm w-5 text-center">
+                  {item.qty}
+                </span>
 
                 <button
                   onClick={() => increaseQty(item.id)}
-                  className="text-[var(--primary-color)] border rounded-full w-7 h-7 flex items-center justify-center"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-[var(--primary-color)] text-white"
                 >
                   <FaPlus size={10} />
                 </button>
@@ -91,14 +118,13 @@ const CartDrawer = ({show, onClose}: Props) => {
 
               <button
                 onClick={() => removeItem(item.id)}
-                className="text-[var(--primary-color)] ml-2"
+                className="ml-2 text-gray-400 hover:text-red-500"
               >
                 <FaTrash size={14} />
               </button>
             </div>
           ))}
         </div>
-
         <div className="p-5 border-t">
           <div className="flex justify-between mb-4 font-semibold">
             <span>Subtotal</span>
@@ -109,7 +135,7 @@ const CartDrawer = ({show, onClose}: Props) => {
             onClick={() => {
               onClose();
               setTimeout(() => {
-                router.push("/checkout");
+                router.push(`/checkout?type=${orderType}`);
               }, 100);
             }}
             className="w-full bg-[var(--primary-color)] text-white py-4 rounded-full font-semibold"

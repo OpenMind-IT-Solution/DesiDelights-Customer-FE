@@ -1,130 +1,121 @@
 "use client";
-import {useState, useEffect} from "react";
 
-type Props = {
-  onClose: () => void;
-  onSelect: (time: string) => void;
-  selectedTime: string | null;
+import {IoClose} from "react-icons/io5";
+
+const generateTimes = () => {
+  const times: string[] = [];
+  let hour = 0;
+  let minute = 0;
+
+  while (hour < 24) {
+    const start = formatTime(hour, minute);
+
+    minute += 30;
+    if (minute === 60) {
+      hour++;
+      minute = 0;
+    }
+
+    const end = formatTime(hour, minute);
+    times.push(`${start} - ${end}`);
+  }
+
+  return times;
 };
 
-export default function TimeModal({onClose, onSelect, selectedTime}: Props) {
-  const [day, setDay] = useState<"today" | "tomorrow">("today");
-  const [localSelected, setLocalSelected] = useState<string | null>(null);
+const formatTime = (h: number, m: number) => {
+  const ampm = h >= 12 ? "PM" : "AM";
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  const min = m.toString().padStart(2, "0");
+  return `${hour}:${min} ${ampm}`;
+};
 
-  // ✅ sync parent value when modal opens
-  useEffect(() => {
-    setLocalSelected(selectedTime);
-  }, [selectedTime]);
+const TimeModal = ({
+  show,
+  onClose,
+  selectedTime,
+  setSelectedTime,
+  selectedDay,
+  setSelectedDay,
+  onConfirm,
+}: any) => {
+  if (!show) return null;
 
-  function generateSlots() {
-    const slots = [];
-    let now = new Date();
-
-    if (day === "tomorrow") {
-      now.setDate(now.getDate() + 1);
-      now.setHours(0, 0, 0, 0);
-    } else {
-      const minutes = now.getMinutes();
-      const next = minutes < 30 ? 30 : 60;
-
-      now.setMinutes(next);
-      now.setSeconds(0);
-
-      if (next === 60) {
-        now.setHours(now.getHours() + 1);
-        now.setMinutes(0);
-      }
-    }
-
-    for (let i = 0; i < 20; i++) {
-      const start = new Date(now);
-      const end = new Date(now);
-      end.setMinutes(end.getMinutes() + 30);
-
-      slots.push({
-        label: `${formatTime(start)} - ${formatTime(end)}`,
-      });
-
-      now.setMinutes(now.getMinutes() + 30);
-    }
-
-    return slots;
-  }
-
-  function formatTime(date: Date) {
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  const slots = generateSlots();
+  const times = generateTimes();
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-[60]">
-      <div className="bg-white w-[600px] max-w-full rounded-2xl p-6 shadow-xl">
-        {/* HEADER */}
-        <div className="flex justify-between mb-4">
-          <h2 className="text-xl font-bold">Select Time Schedule</h2>
-          <button onClick={onClose}>✕</button>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white w-[600px] max-w-[95%] rounded-2xl shadow-xl p-6 relative">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-xl font-semibold">Select Time Schedule</h2>
+          <button onClick={onClose}>
+            <IoClose size={22} />
+          </button>
         </div>
 
-        {/* DAY */}
-        <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-full w-fit">
+        <div className="flex gap-3 mb-6">
           <button
-            onClick={() => setDay("today")}
+            onClick={() => setSelectedDay("today")}
             className={`px-5 py-2 rounded-full ${
-              day === "today" ? "bg-[var(--primary-color)] text-white" : ""
+              selectedDay === "today"
+                ? "bg-[#FA664D] text-white"
+                : "bg-gray-200 text-gray-700"
             }`}
           >
             Today
           </button>
 
           <button
-            onClick={() => setDay("tomorrow")}
+            onClick={() => setSelectedDay("tomorrow")}
             className={`px-5 py-2 rounded-full ${
-              day === "tomorrow" ? "bg-[var(--primary-color)] text-white" : ""
+              selectedDay === "tomorrow"
+                ? "bg-[#FA664D] text-white"
+                : "bg-gray-200 text-gray-700"
             }`}
           >
             Tomorrow
           </button>
         </div>
 
-        {/* SLOTS */}
-        <div className="grid grid-cols-2 gap-4 max-h-[400px] overflow-y-auto">
-          {slots.map((slot, i) => {
-            const fullTime = `${day} - ${slot.label}`;
-
-            return (
-              <div
-                key={i}
-                onClick={() => setLocalSelected(fullTime)}
-                className={`cursor-pointer py-3 text-center rounded-full text-sm transition
-                ${
-                  localSelected === fullTime
-                    ? "bg-[var(--primary-color)] text-white shadow"
-                    : "bg-gray-100"
-                }`}
-              >
-                {slot.label}
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-2">
+          {times.map((time) => (
+            <div
+              key={time}
+              onClick={() => setSelectedTime(time)}
+              className={`py-3 rounded-full text-center cursor-pointer transition ${
+                selectedTime === time
+                  ? "bg-[#FA664D] text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              {time}
+            </div>
+          ))}
         </div>
 
-        {/* CONFIRM */}
-        {localSelected && (
-          <button
-            onClick={() => {
-              onSelect(localSelected);
-              onClose();
-            }}
-            className="mt-6 w-full bg-[var(--primary-color)] text-white py-3 rounded-full"
-          >
-            Confirm Time
-          </button>
-        )}
+        <button
+          onClick={() => {
+            if (!selectedTime) {
+              alert("Please select a time");
+              return;
+            }
+
+            if (onConfirm) {
+              onConfirm({
+                day: selectedDay,
+                time: selectedTime,
+              });
+            }
+
+            onClose();
+          }}
+          className="w-full mt-6 py-3 rounded-full bg-[#FA664D] text-white font-semibold hover:opacity-90"
+        >
+          Confirm Time
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default TimeModal;

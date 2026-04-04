@@ -2,97 +2,91 @@
 
 import Link from "next/link";
 import {useRouter} from "next/navigation";
+import {useState} from "react";
 
 export default function LoginPage() {
   const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      return alert("All fields required");
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white max-w-md w-full p-10 rounded-2xl shadow-xl">
-        <h2 className="text-2xl font-bold text-center mb-6">Welcome Back</h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] px-4">
+      <div className="w-full max-w-md bg-white p-10 rounded-3xl shadow-xl">
+        {/* Heading */}
+        <h2 className="text-3xl font-bold text-center mb-8 text-gray-800">
+          Welcome Back
+        </h2>
 
-        <div className="mb-4">
-          <label className="block mb-2 text-sm font-medium">Email</label>
-
+        {/* Email */}
+        <div className="mb-6">
+          <label className="text-sm text-gray-500 mb-2 block">Email</label>
           <input
             type="email"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#FA664D]"
+            placeholder="Enter email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-2 py-3 border-b border-gray-300 outline-none 
+            focus:border-[#FA664D] transition bg-transparent"
           />
         </div>
 
+        {/* Password */}
         <div className="mb-4">
-          <label className="block mb-2 text-sm font-medium">Password</label>
-
+          <label className="text-sm text-gray-500 mb-2 block">Password</label>
           <input
             type="password"
-            className="w-full border border-gray-200 rounded-lg px-4 py-3 outline-none focus:border-[#FA664D]"
+            placeholder="Enter password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-2 py-3 border-b border-gray-300 outline-none 
+            focus:border-[#FA664D] transition bg-transparent"
           />
         </div>
 
-        <div className="flex justify-between items-center text-sm mb-5">
-          <label className="flex items-center gap-2">
-            <input type="checkbox" />
+        {/* Remember + Forgot */}
+        <div className="flex justify-between items-center text-sm mb-8">
+          <label className="flex items-center gap-2 text-gray-500">
+            <input type="checkbox" className="accent-[#FA664D]" />
             Remember Me
           </label>
 
           <Link
-            href={"/forgot-password"}
-            className="text-[#FA664D] cursor-pointer"
+            href="/forgot-password"
+            className="text-[#FA664D] hover:underline"
           >
-            Forget Password
+            Forgot Password
           </Link>
         </div>
 
-        <button className="w-full py-3 rounded-full text-white font-semibold bg-[#FA664D] hover:bg-[#e85a43] transition">
-          Login
-        </button>
-
-        <div className="flex items-center gap-3 my-6">
-          <hr className="flex-1 border-gray-200" />
-          <span className="text-gray-400 text-sm">Or</span>
-          <hr className="flex-1 border-gray-200" />
-        </div>
-
+        {/* Login Button */}
         <button
-          type="button"
-          onClick={() => router.push("/guest-login")}
-          className="w-full py-3 rounded-full border-2 border-[#FA664D] 
-          text-[#FA664D] font-semibold text-lg
-          hover:bg-[#FA664D] hover:text-white 
-          transition-all duration-200 
-          shadow-sm hover:shadow-md 
-          active:scale-[0.97]"
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
+          hover:bg-[#e85a43] transition-all duration-200 shadow-md hover:shadow-lg"
         >
-          Login as Guest
+          {loading ? "Logging in..." : "Login"}
         </button>
+
+        {/* Signup */}
+        <p className="text-center text-sm text-gray-500 mt-8">
+          Don’t have an account?{" "}
+          <Link
+            href="/register"
+            className="text-[#FA664D] font-semibold hover:underline"
+          >
+            Sign Up
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
-//  return (
-//     <div className="forgot-password-container">
-//       <div className="forgot-password-form">
-//         <h2>Forgot Password</h2>
-//         <form onSubmit={handleSubmit}>
-//           <div className="form-group">
-//             <label htmlFor="email">Email Address</label>
-//             <input
-//               id="email"
-//               type="email"
-//               value={email}
-//               onChange={(e) => setEmail(e.target.value)}
-//               placeholder="Enter your registered email"
-//               required
-//               disabled={isLoading}
-//             />
-//           </div>
-//           {error && <div className="error-message">{error}</div>}
-//           <button type="submit" disabled={isLoading}>
-//             {isLoading ? "Sending..." : "Send Reset Link"}
-//           </button>
-//         </form>
-//         <p className="back-to-login">
-//           Remember your password? <a href="/login">Back to Login</a>
-//         </p>
-//       </div>
-//     </div>
-//   );

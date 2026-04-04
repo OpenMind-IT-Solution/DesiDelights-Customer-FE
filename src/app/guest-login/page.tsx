@@ -1,8 +1,10 @@
 "use client";
 import {useState} from "react";
+import {useRouter} from "next/navigation";
 
 export default function GuestLogin() {
   const [mobile, setMobile] = useState("");
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +45,10 @@ export default function GuestLogin() {
 
         <p className="text-center text-gray-500 mt-6">
           Already have an account?{" "}
-          <span className="text-[#FA664D] cursor-pointer hover:underline">
+          <span
+            onClick={() => router.push("/login")}
+            className="text-[#FA664D] cursor-pointer hover:underline"
+          >
             Log in
           </span>
         </p>

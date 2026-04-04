@@ -108,7 +108,6 @@ const FeaturedItems = () => {
                       €{item.price.toFixed(2)}
                     </span>
 
-                    {/* 🔥 FINAL BUTTON LOGIC */}
                     {cartItem ? (
                       <div className="flex items-center gap-2 bg-[var(--primary-color)] text-white px-3 py-1 rounded-full">
                         <button onClick={() => decreaseQty(item.id)}>-</button>
@@ -127,7 +126,6 @@ const FeaturedItems = () => {
           })}
         </div>
 
-        {/* 🔥 Modal */}
         {selectedItem && (
           <MenuItemModal
             item={selectedItem}
