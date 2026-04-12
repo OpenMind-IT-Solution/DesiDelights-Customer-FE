@@ -17,19 +17,58 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: {target: {name: any; value: any}}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({...form, [e.target.name]: e.target.value});
   };
 
   const handleRegister = async () => {
     const {name, email, phone, password, confirmPassword} = form;
 
+    // ✅ Validation
     if (!name || !email || !phone || !password || !confirmPassword) {
-      return alert("All fields are required");
+      alert("All fields are required");
+      return;
     }
 
     if (password !== confirmPassword) {
-      return alert("Passwords do not match");
+      alert("Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 👉 If backend exists, call API here
+      // Example:
+      // const res = await fetch("/api/register", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(form),
+      // });
+
+      // if (!res.ok) throw new Error("Registration failed");
+
+      // 👉 Temporary fake delay (remove later)
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      alert("Account created successfully ✅");
+
+      // ✅ Clear form
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+      });
+
+      // ✅ Redirect to login page
+      router.push("/login");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong ❌");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,18 +78,18 @@ export default function RegisterPage() {
         {/* Heading */}
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
-          {/* <p className="text-gray-500 text-sm mt-1">Join us</p> */}
         </div>
 
-        {/* Name + Phone Row */}
+        {/* Name + Phone */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <label className="text-sm text-gray-500 mb-2 block">Name</label>
             <input
               name="name"
               type="text"
-              placeholder="Enter Name"
+              value={form.name}
               onChange={handleChange}
+              placeholder="Enter Name"
               className="w-full px-2 py-3 border-b border-gray-300 outline-none 
               focus:border-[#FA664D] transition bg-transparent"
             />
@@ -61,8 +100,9 @@ export default function RegisterPage() {
             <input
               name="phone"
               type="tel"
-              placeholder="+32 4xx xx xx xx"
+              value={form.phone}
               onChange={handleChange}
+              placeholder="+91 9876543210"
               className="w-full px-2 py-3 border-b border-gray-300 outline-none 
               focus:border-[#FA664D] transition bg-transparent"
             />
@@ -75,8 +115,9 @@ export default function RegisterPage() {
           <input
             name="email"
             type="email"
-            placeholder="Enter email"
+            value={form.email}
             onChange={handleChange}
+            placeholder="Enter email"
             className="w-full px-2 py-3 border-b border-gray-300 outline-none 
             focus:border-[#FA664D] transition bg-transparent"
           />
@@ -88,8 +129,9 @@ export default function RegisterPage() {
           <input
             name="password"
             type="password"
-            placeholder="Enter password"
+            value={form.password}
             onChange={handleChange}
+            placeholder="Enter password"
             className="w-full px-2 py-3 border-b border-gray-300 outline-none 
             focus:border-[#FA664D] transition bg-transparent"
           />
@@ -103,8 +145,9 @@ export default function RegisterPage() {
           <input
             name="confirmPassword"
             type="password"
-            placeholder="Re-enter password"
+            value={form.confirmPassword}
             onChange={handleChange}
+            placeholder="Re-enter password"
             className="w-full px-2 py-3 border-b border-gray-300 outline-none 
             focus:border-[#FA664D] transition bg-transparent"
           />
@@ -115,7 +158,8 @@ export default function RegisterPage() {
           onClick={handleRegister}
           disabled={loading}
           className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
-          hover:bg-[#e85a43] transition-all duration-200 shadow-lg hover:shadow-xl active:scale-[0.98]"
+          hover:bg-[#e85a43] transition-all duration-200 shadow-lg 
+          hover:shadow-xl active:scale-[0.98] disabled:opacity-70"
         >
           {loading ? "Creating Account..." : "Create Account"}
         </button>

@@ -3,14 +3,7 @@
 import {useEffect, useState} from "react";
 import {useRouter} from "next/navigation";
 import {PiUserCircleFill} from "react-icons/pi";
-import {
-  FiShoppingBag,
-  FiEdit,
-  FiMessageCircle,
-  FiMapPin,
-  FiKey,
-  FiLogOut,
-} from "react-icons/fi";
+import {FiShoppingBag, FiEdit, FiKey, FiLogOut} from "react-icons/fi";
 import Button from "../Button/Button";
 import {useLanguage} from "@/app/context/LanguageContext";
 
@@ -22,11 +15,18 @@ const LoginButton = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) setUser(JSON.parse(storedUser));
+    const loadUser = () => {
+      const storedUser = localStorage.getItem("user");
+      setUser(storedUser ? JSON.parse(storedUser) : null);
+    };
+
+    loadUser();
+
+    window.addEventListener("focus", loadUser);
+
+    return () => window.removeEventListener("focus", loadUser);
   }, []);
 
-  // 🔁 Logout
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
@@ -46,46 +46,58 @@ const LoginButton = () => {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 bg-[#FA664D] text-white px-5 py-2 rounded-full font-medium"
+        className="flex items-center gap-2 bg-[#FA664D] text-white px-5 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all"
       >
         <PiUserCircleFill size={22} />
-        Account {open ? "▴" : "▾"}
+        Account
+        <span className="ml-1">{open ? "▴" : "▾"}</span>
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border">
+          {/* Profile */}
           <div className="flex items-center gap-4 p-4 border-b">
             <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center">
               <PiUserCircleFill size={32} />
             </div>
 
             <div>
-              <p className="font-semibold">{user.name || "User"}</p>
+              <p className="font-semibold text-gray-800">
+                {user.name || "User"}
+              </p>
               <p className="text-sm text-gray-500">
                 {user.email || "user@email.com"}
               </p>
             </div>
           </div>
 
+          {/* Menu */}
           <div className="flex flex-col text-sm">
             <Item
               icon={<FiShoppingBag />}
               label="My Orders"
               onClick={() => {
                 router.push("/my-orders");
-                setOpen(false); // if you have dropdown state
+                setOpen(false);
               }}
             />
+
             <Item
               icon={<FiEdit />}
               label="Edit Profile"
-              onClick={() => router.push("/profile")}
+              onClick={() => {
+                router.push("/profile");
+                setOpen(false);
+              }}
             />
 
             <Item
               icon={<FiKey />}
               label="Change Password"
-              onClick={() => router.push("/forgot-password")}
+              onClick={() => {
+                router.push("/forgot-password");
+                setOpen(false);
+              }}
             />
 
             <div className="border-t mt-2" />
