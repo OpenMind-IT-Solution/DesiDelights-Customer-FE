@@ -3,7 +3,7 @@ import {Geist, Geist_Mono} from "next/font/google";
 import {LanguageProvider} from "./context/LanguageContext";
 import {CartProvider} from "./context/CartContext";
 import LayoutWrapper from "@/components/LayoutWrapper";
-import { ToastContainer } from "react-toastify";
+import {ToastContainer} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./globals.css";
 
@@ -20,6 +20,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "DesiDelights",
   description: "Authenticate Indian Food | Indian Restaurant",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
