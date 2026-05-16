@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import LanguageDropdown from "../LanguageDropdown/LanguageDropdown";
 import SearchComponent from "../SearchComponent/SearchComponent";
 import LoginButton from "./LoginButton";
@@ -17,7 +18,7 @@ const Header = () => {
       <header className="sticky top-0 shadow-md py-3 sm:py-4 bg-white z-50">
         <div className="px-4 sm:px-8 lg:px-20">
           <div className="flex justify-between items-center gap-4 sm:gap-6">
-            <div className="flex-shrink-0">
+            <Link href="/" className="flex-shrink-0 cursor-pointer">
               <Image 
                 src="/images/logo.png" 
                 alt="Logo" 
@@ -25,7 +26,7 @@ const Header = () => {
                 height={80} 
                 className="w-[60px] h-[60px] sm:w-[90px] sm:h-[90px] object-contain"
               />
-            </div>
+            </Link>
 
             <div className="hidden lg:block">
               <Menu />

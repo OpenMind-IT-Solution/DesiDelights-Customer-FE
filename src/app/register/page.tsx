@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "react-toastify";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { signup } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -58,39 +60,29 @@ export default function RegisterPage() {
     try {
       setLoading(true);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/website/auth/signup`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName: name,
-          email,
-          phoneNumber: phone,
-          password
-        }),
+      await signup({
+        fullName: name,
+        email,
+        phoneNumber: phone,
+        password
       });
 
-      const data = await response.json();
+      toast.success("Account created successfully ✅");
 
-      if (response.status === 201) {
-        toast.success("Account created successfully ✅");
+      // ✅ Clear form
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        confirmPassword: "",
+      });
 
-        // ✅ Clear form
-        setForm({
-          name: "",
-          email: "",
-          phone: "",
-          password: "",
-          confirmPassword: "",
-        });
-
-        // ✅ Redirect to login page
-        router.push("/login");
-      } else {
-        toast.error(data.message || "Registration failed ❌");
-      }
-    } catch (error) {
+      // ✅ Redirect to home page (signup usually logs the user in)
+      router.push("/");
+    } catch (error: any) {
       console.error(error);
-      toast.error("Something went wrong ❌");
+      toast.error(error.response?.data?.message || "Registration failed ❌");
     } finally {
       setLoading(false);
     }
