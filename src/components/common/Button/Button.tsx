@@ -26,11 +26,11 @@ const Button: React.FC<ButtonProps> = ({
   const variantClasses =
     variant === "primary"
       ? type === "fill"
-        ? `bg-[var(--primary-color)] text-white border-[var(--primary-color)] hover:bg-transparent hover:text-[var(--primary-color)]`
-        : `text-[var(--primary-color)] border-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white`
+        ? `bg-primary text-white border-primary hover:bg-transparent hover:text-primary`
+        : `text-primary border-primary hover:bg-primary hover:text-white`
       : type === "fill"
-      ? `bg-[var(--secondary-color)] text-white border-[var(--secondary-color)] hover:bg-transparent hover:text-[var(--secondary-color)]`
-      : `text-[var(--secondary-color)] border-[var(--secondary-color)] hover:bg-[var(--secondary-color)] hover:text-white`;
+      ? `bg-secondary text-white border-secondary hover:bg-transparent hover:text-secondary`
+      : `text-secondary border-secondary hover:bg-secondary hover:text-white`;
 
   const classes = `${baseClasses} ${variantClasses} ${className}`.trim();
 
