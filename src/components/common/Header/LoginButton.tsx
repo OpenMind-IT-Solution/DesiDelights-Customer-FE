@@ -52,7 +52,7 @@ const LoginButton = () => {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 bg-[#FA664D] text-white px-5 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all"
+        className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all"
       >
         <PiUserCircleFill size={22} />
         Account
@@ -126,7 +126,7 @@ const Item = ({icon, label, onClick, theme}: any) => (
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 cursor-pointer transition ${
       theme
-        ? "text-[#FA664D] font-medium hover:bg-[#FA664D]/10"
+        ? "text-primary font-medium hover:bg-primary/10"
         : "text-gray-700 hover:bg-gray-100"
     }`}
   >
