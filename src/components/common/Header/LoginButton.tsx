@@ -7,29 +7,17 @@ import {FiShoppingBag, FiEdit, FiKey, FiLogOut} from "react-icons/fi";
 import Button from "../Button/Button";
 import {useLanguage} from "@/app/context/LanguageContext";
 
+import { useAuth } from "@/app/context/AuthContext";
+
 const LoginButton = () => {
   const {t} = useLanguage();
   const router = useRouter();
-
-  const [user, setUser] = useState<any>(null);
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
 
-  useEffect(() => {
-    const loadUser = () => {
-      const storedUser = localStorage.getItem("user");
-      setUser(storedUser ? JSON.parse(storedUser) : null);
-    };
-
-    loadUser();
-
-    window.addEventListener("focus", loadUser);
-
-    return () => window.removeEventListener("focus", loadUser);
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
+    logout();
+    setOpen(false);
     router.push("/");
   };
 
@@ -69,7 +57,7 @@ const LoginButton = () => {
 
             <div>
               <p className="font-semibold text-gray-800">
-                {user.name || "User"}
+                {user.fullName}
               </p>
               <p className="text-sm text-gray-500">
                 {user.email || "user@email.com"}

@@ -6,69 +6,32 @@ import "swiper/css/free-mode";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode } from "swiper/modules";
 
+import { useState, useEffect } from "react";
+import { websiteService } from "@/api/services/websiteService";
+import { Category } from "@/types/api";
+
 const MenuSlider = () => {
-  const menuItems = [
-    {
-      menuImage: "/images/menu/item1.png",
-      name: "Burgers",
-    },
-    {
-      menuImage: "/images/menu/item2.png",
-      name: "Sandwich from the Grill",
-    },
-    {
-      menuImage: "/images/menu/item3.png",
-      name: "Pizzas",
-    },
-    {
-      menuImage: "/images/menu/item4.png",
-      name: "Drinks",
-    },
-    {
-      menuImage: "/images/menu/item5.png",
-      name: "Desserts",
-    },
-    {
-      menuImage: "/images/menu/item1.png",
-      name: "Burgers",
-    },
-    {
-      menuImage: "/images/menu/item2.png",
-      name: "Sandwich from the Grill",
-    },
-    {
-      menuImage: "/images/menu/item3.png",
-      name: "Pizzas",
-    },
-    {
-      menuImage: "/images/menu/item4.png",
-      name: "Drinks",
-    },
-    {
-      menuImage: "/images/menu/item5.png",
-      name: "Desserts",
-    },
-    {
-      menuImage: "/images/menu/item1.png",
-      name: "Burgers",
-    },
-    {
-      menuImage: "/images/menu/item2.png",
-      name: "Sandwich from the Grill",
-    },
-    {
-      menuImage: "/images/menu/item3.png",
-      name: "Pizzas",
-    },
-    {
-      menuImage: "/images/menu/item4.png",
-      name: "Drinks",
-    },
-    {
-      menuImage: "/images/menu/item5.png",
-      name: "Desserts",
-    },
-  ];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await websiteService.getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  if (loading) {
+    return <div className="py-4 text-center">Loading categories...</div>;
+  }
 
   return (
     <div className="w-full py-4">
@@ -80,17 +43,10 @@ const MenuSlider = () => {
         grabCursor={true}
         className="cursor-grab"
       >
-        {menuItems.map((item, index) => (
-          <SwiperSlide key={index}>
+        {categories.map((item) => (
+          <SwiperSlide key={item.id}>
             <div className="bg-gray-100 hover:bg-(--primary-color) hover:text-white transition-all duration-200 rounded-xl py-3 px-5 flex flex-col justify-center items-center gap-2 min-w-22.5 cursor-pointer">
-              <Image
-                src={item.menuImage}
-                alt={item.name}
-                width={75}
-                height={48}
-                className="object-contain h-12"
-              />
-              <p className="text-sm font-medium text-center h-10">
+              <p className="text-sm font-medium text-center">
                 {item.name}
               </p>
             </div>

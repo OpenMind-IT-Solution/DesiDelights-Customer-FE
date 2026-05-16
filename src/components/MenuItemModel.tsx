@@ -5,16 +5,10 @@ import {useState, useEffect} from "react";
 import {FaTimes} from "react-icons/fa";
 import {useCart} from "@/app/context/CartContext";
 
-type Item = {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-};
+import { MenuItem } from "@/types/api";
 
 type Props = {
-  item: Item | null;
+  item: MenuItem | null;
   onClose: () => void;
 };
 
@@ -45,12 +39,13 @@ const MenuItemModal = ({item, onClose}: Props) => {
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
-      addToCart({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        image: item.image,
-      });
+        addToCart({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          image: item.image || "/images/placeholder.png",
+          size: null,
+        });
     }
 
     onClose();
@@ -75,7 +70,7 @@ const MenuItemModal = ({item, onClose}: Props) => {
         <div className="flex gap-4 mb-4">
           <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
             <Image
-              src={item.image}
+              src={item.image || "/images/placeholder.png"}
               alt={item.name}
               fill
               className="object-cover"

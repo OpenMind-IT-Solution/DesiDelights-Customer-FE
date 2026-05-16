@@ -1,63 +1,56 @@
 "use client";
 
-import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
+import { toast } from "react-toastify";
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { user, updateUser } = useAuth();
 
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     phone: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-
-      const nameParts = user.name ? user.name.split(" ") : ["", ""];
-
+    if (user) {
       setForm({
-        firstName: nameParts[0] || "",
-        lastName: nameParts[1] || "",
+        fullName: user.fullName || "",
         email: user.email || "",
         phone: user.phone || "",
       });
     }
-  }, []);
+  }, [user]);
 
-  const handleChange = (e: any) => {
-    setForm({...form, [e.target.name]: e.target.value});
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleUpdate = () => {
-    const updatedUser = {
-      name: form.firstName + " " + form.lastName,
-      email: form.email,
-      phone: form.phone,
-    };
+  const handleUpdate = async () => {
+    try {
+      setLoading(true);
+      await updateUser({
+        fullName: form.fullName,
+        email: form.email,
+        phone: form.phone,
+      });
 
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-
-    alert("Profile updated ✅");
-
-    router.push("/");
-    window.location.reload();
+      toast.success("Profile updated ✅");
+      router.push("/");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Update failed ❌");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 px-4 py-6 sm:py-10">
-      {/* Back */}
-      <button
-        onClick={() => router.push("/")}
-        className="text-[#FA664D] font-medium mb-6"
-      >
-        ← Back to Home
-      </button>
 
       {/* Card */}
       <div className="max-w-3xl mx-auto bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-lg">
@@ -67,26 +60,13 @@ export default function ProfilePage() {
 
         {/* Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
-          <div>
+          <div className="sm:col-span-2">
             <label className="text-sm text-gray-500 mb-2 block">
-              First Name
+              Full Name
             </label>
             <input
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 outline-none 
-              focus:border-[#FA664D] transition"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-500 mb-2 block">
-              Last Name
-            </label>
-            <input
-              name="lastName"
-              value={form.lastName}
+              name="fullName"
+              value={form.fullName}
               onChange={handleChange}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 outline-none 
               focus:border-[#FA664D] transition"

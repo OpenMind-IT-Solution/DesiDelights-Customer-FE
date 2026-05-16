@@ -1,6 +1,7 @@
 import type {Metadata} from "next";
 import {Geist, Geist_Mono} from "next/font/google";
 import {LanguageProvider} from "./context/LanguageContext";
+import {AuthProvider} from "./context/AuthContext";
 import {CartProvider} from "./context/CartContext";
 import LayoutWrapper from "@/components/LayoutWrapper";
 import {ToastContainer} from "react-toastify";
@@ -32,10 +33,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <LanguageProvider>
-          <CartProvider>
-            <LayoutWrapper>{children}</LayoutWrapper>
-            <ToastContainer position="top-right" autoClose={3000} />
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <LayoutWrapper>{children}</LayoutWrapper>
+              <ToastContainer position="top-right" autoClose={3000} />
+            </CartProvider>
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

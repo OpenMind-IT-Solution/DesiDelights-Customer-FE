@@ -4,7 +4,7 @@ import {createContext, useContext, useEffect, useState} from "react";
 
 type CartItem = {
   size: any;
-  id: number;
+  id: string | number;
   name: string;
   price: number;
   image: string;
@@ -15,9 +15,9 @@ type CartContextType = {
   cartItems: CartItem[];
   cartTotal: number;
   addToCart: (item: Omit<CartItem, "qty">) => void;
-  increaseQty: (id: number) => void;
-  decreaseQty: (id: number) => void;
-  removeItem: (id: number) => void;
+  increaseQty: (id: string | number) => void;
+  decreaseQty: (id: string | number) => void;
+  removeItem: (id: string | number) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);

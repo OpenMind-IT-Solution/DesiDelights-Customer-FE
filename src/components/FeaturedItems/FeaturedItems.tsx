@@ -6,66 +6,37 @@ import Image from "next/image";
 import {FaInfoCircle} from "react-icons/fa";
 import {PiBagSimpleFill} from "react-icons/pi";
 import Button from "../common/Button/Button";
-import {useState} from "react";
+import { useState, useEffect } from "react";
 import MenuItemModal from "../MenuItemModel";
-
-type MenuItem = {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  type: string;
-};
+import { websiteService } from "@/api/services/websiteService";
+import { MenuItem } from "@/types/api";
 
 const FeaturedItems = () => {
   const {t} = useLanguage();
   const {cartItems, increaseQty, decreaseQty} = useCart();
 
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [featuredItems, setFeaturedItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredItems: MenuItem[] = [
-    {
-      id: 1,
-      name: "Fried Cheese Wonton",
-      description: "Crispy fried cream cheese wontons...",
-      price: 2.0,
-      image: "/images/menu/item1.png",
-      type: "veg",
-    },
-    {
-      id: 2,
-      name: "Panner Tikka Wrap",
-      description: "Soft tortilla stuffed with marinated panner...",
-      price: 3.2,
-      image: "/images/menu/panner-wrap.png",
-      type: "veg",
-    },
-    {
-      id: 3,
-      name: "Veggie Supreme Burger",
-      description: "Loaded with grilled vegetables...",
-      price: 2.8,
-      image: "/images/menu/veg-burger.png",
-      type: "veg",
-    },
-    {
-      id: 4,
-      name: "Crispy Potato Twisters",
-      description: "Spiral-cut crispy potatoes...",
-      price: 1.5,
-      image: "/images/menu/potato-twisters.png",
-      type: "veg",
-    },
-    {
-      id: 5,
-      name: "Cheesy Garlic Bread",
-      description: "Oven-baked bread with garlic butter...",
-      price: 2.5,
-      image: "/images/menu/garlic-bread.png",
-      type: "veg",
-    },
-  ];
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const data = await websiteService.getMenuItems();
+        setFeaturedItems(data);
+      } catch (error) {
+        console.error("Failed to fetch featured items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchItems();
+  }, []);
+
+  if (loading) {
+    return <div className="py-10 text-center">Loading featured items...</div>;
+  }
 
   return (
     <section className="py-10 md:py-14">
@@ -83,7 +54,7 @@ const FeaturedItems = () => {
               >
                 <div className="relative w-full h-40 bg-gray-100">
                   <Image
-                    src={item.image}
+                    src={item.image || "/images/placeholder.png"}
                     alt={item.name}
                     fill
                     className="object-cover"

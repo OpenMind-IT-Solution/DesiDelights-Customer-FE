@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login, guestLogin } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,35 +36,18 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
+      await login({ login: email, password });
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/website/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ login: email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.status === 200) {
-        localStorage.setItem("user", JSON.stringify(data.data));
-
-        if (rememberMe) {
-          localStorage.setItem("rememberedEmail", email);
-        } else {
-          localStorage.removeItem("rememberedEmail");
-        }
-
-        toast.success("Login successful ✅");
-        router.push("/");
-        router.refresh();
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
       } else {
-        toast.error(data.message || "Login failed ❌");
+        localStorage.removeItem("rememberedEmail");
       }
-    } catch (error) {
-      toast.error("Login failed ❌");
+
+      toast.success("Login successful ✅");
+      router.push("/");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login failed ❌");
     } finally {
       setLoading(false);
     }
@@ -77,31 +62,11 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/website/auth/guest-login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ restaurantId: [1], phoneNumber: guestPhoneNumber }),
-        },
-      );
-
-      const data = await response.json();
-
-      if (response.status === 200) {
-        localStorage.setItem("user", JSON.stringify(data.data));
-        toast.success("Guest login successful ✅");
-        router.push("/");
-        router.refresh();
-      } else {
-        toast.error(data.message || "Guest login failed ❌");
-      }
-    } catch (error) {
-      toast.error("Guest login failed ❌");
+      await guestLogin(guestPhoneNumber);
+      toast.success("Guest login successful ✅");
+      router.push("/");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Guest login failed ❌");
     } finally {
       setLoading(false);
     }
