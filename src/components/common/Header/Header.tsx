@@ -14,19 +14,29 @@ const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 shadow-md py-4 bg-white z-50">
-        <div className="px-20">
-          <div className="flex justify-between items-center gap-6">
-            <Image src="/images/logo.png" alt="Logo" width={90} height={90} />
+      <header className="sticky top-0 shadow-md py-3 sm:py-4 bg-white z-50">
+        <div className="px-4 sm:px-8 lg:px-20">
+          <div className="flex justify-between items-center gap-4 sm:gap-6">
+            <div className="flex-shrink-0">
+              <Image 
+                src="/images/logo.png" 
+                alt="Logo" 
+                width={80} 
+                height={80} 
+                className="w-[60px] h-[60px] sm:w-[90px] sm:h-[90px] object-contain"
+              />
+            </div>
 
-            <Menu />
+            <div className="hidden lg:block">
+              <Menu />
+            </div>
 
-            <div className="flex items-center gap-5">
-              <SearchComponent />
+            <div className="flex items-center gap-2 sm:gap-5">
+              <div className="hidden sm:block">
+                <SearchComponent />
+              </div>
               <LanguageDropdown />
-
               <CartButton onClick={() => setShowCart(true)} />
-
               <LoginButton />
             </div>
           </div>

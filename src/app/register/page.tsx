@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import {useRouter} from "next/navigation";
-import {useState} from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -17,155 +18,180 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
 
+  const phoneRegex = /^\+?[1-9]\d{11,14}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({...form, [e.target.name]: e.target.value});
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleRegister = async () => {
-    const {name, email, phone, password, confirmPassword} = form;
+  const handleRegister = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const { name, email, phone, password, confirmPassword } = form;
 
     // ✅ Validation
     if (!name || !email || !phone || !password || !confirmPassword) {
-      alert("All fields are required");
+      toast.error("All fields are required");
+      return;
+    }
+
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (!phoneRegex.test(phone)) {
+      toast.error("Please enter a valid phone number with country code (e.g., +32...)");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 👉 If backend exists, call API here
-      // Example:
-      // const res = await fetch("/api/register", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(form),
-      // });
-
-      // if (!res.ok) throw new Error("Registration failed");
-
-      // 👉 Temporary fake delay (remove later)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      alert("Account created successfully ✅");
-
-      // ✅ Clear form
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/website/auth/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: name,
+          email,
+          phoneNumber: phone,
+          password
+        }),
       });
 
-      // ✅ Redirect to login page
-      router.push("/login");
+      const data = await response.json();
+
+      if (response.status === 201) {
+        toast.success("Account created successfully ✅");
+
+        // ✅ Clear form
+        setForm({
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          confirmPassword: "",
+        });
+
+        // ✅ Redirect to login page
+        router.push("/login");
+      } else {
+        toast.error(data.message || "Registration failed ❌");
+      }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong ❌");
+      toast.error("Something went wrong ❌");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4">
-      <div className="w-full max-w-lg bg-white p-10 rounded-3xl shadow-2xl border border-gray-100">
+    <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4 py-10">
+      <div className="w-full max-w-lg bg-white p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-2xl border border-gray-100">
         {/* Heading */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-800">Create Account</h2>
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Create Account</h2>
         </div>
 
-        {/* Name + Phone */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div>
-            <label className="text-sm text-gray-500 mb-2 block">Name</label>
+        <form onSubmit={handleRegister}>
+          {/* Name + Phone - Responsive Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5 sm:mb-6">
+            <div>
+              <label className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 block">Name</label>
+              <input
+                name="name"
+                type="text"
+                value={form.name}
+                onChange={handleChange}
+                placeholder="Enter Name"
+                className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
+                focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 block">Phone</label>
+              <input
+                name="phone"
+                type="tel"
+                value={form.phone}
+                onChange={handleChange}
+                placeholder="e.g. +327123456789"
+                className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
+                focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="mb-5 sm:mb-6">
+            <label className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 block">Email</label>
             <input
-              name="name"
-              type="text"
-              value={form.name}
+              name="email"
+              type="email"
+              value={form.email}
               onChange={handleChange}
-              placeholder="Enter Name"
-              className="w-full px-2 py-3 border-b border-gray-300 outline-none 
-              focus:border-[#FA664D] transition bg-transparent"
+              placeholder="Enter email"
+              className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
+              focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
             />
           </div>
 
-          <div>
-            <label className="text-sm text-gray-500 mb-2 block">Phone</label>
+          {/* Password */}
+          <div className="mb-5 sm:mb-6">
+            <label className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 block">Password</label>
             <input
-              name="phone"
-              type="tel"
-              value={form.phone}
+              name="password"
+              type="password"
+              value={form.password}
               onChange={handleChange}
-              placeholder="+91 9876543210"
-              className="w-full px-2 py-3 border-b border-gray-300 outline-none 
-              focus:border-[#FA664D] transition bg-transparent"
+              placeholder="Enter password"
+              className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
+              focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
             />
           </div>
-        </div>
 
-        {/* Email */}
-        <div className="mb-6">
-          <label className="text-sm text-gray-500 mb-2 block">Email</label>
-          <input
-            name="email"
-            type="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="Enter email"
-            className="w-full px-2 py-3 border-b border-gray-300 outline-none 
-            focus:border-[#FA664D] transition bg-transparent"
-          />
-        </div>
+          {/* Confirm Password */}
+          <div className="mb-6 sm:mb-8">
+            <label className="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 block">
+              Confirm Password
+            </label>
+            <input
+              name="confirmPassword"
+              type="password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter password"
+              className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
+              focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
+            />
+          </div>
 
-        {/* Password */}
-        <div className="mb-6">
-          <label className="text-sm text-gray-500 mb-2 block">Password</label>
-          <input
-            name="password"
-            type="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="Enter password"
-            className="w-full px-2 py-3 border-b border-gray-300 outline-none 
-            focus:border-[#FA664D] transition bg-transparent"
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div className="mb-6">
-          <label className="text-sm text-gray-500 mb-2 block">
-            Confirm Password
-          </label>
-          <input
-            name="confirmPassword"
-            type="password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            placeholder="Re-enter password"
-            className="w-full px-2 py-3 border-b border-gray-300 outline-none 
-            focus:border-[#FA664D] transition bg-transparent"
-          />
-        </div>
-
-        {/* Button */}
-        <button
-          onClick={handleRegister}
-          disabled={loading}
-          className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
-          hover:bg-[#e85a43] transition-all duration-200 shadow-lg 
-          hover:shadow-xl active:scale-[0.98] disabled:opacity-70"
-        >
-          {loading ? "Creating Account..." : "Create Account"}
-        </button>
+          {/* Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
+            hover:bg-[#e85a43] transition-all duration-200 shadow-lg 
+            hover:shadow-xl active:scale-[0.98] disabled:opacity-70 text-sm sm:text-base"
+          >
+            {loading ? "Creating Account..." : "Create Account"}
+          </button>
+        </form>
 
         {/* Login Link */}
-        <p className="text-center text-sm text-gray-500 mt-8">
+        <p className="text-center text-xs sm:text-sm text-gray-500 mt-6 sm:mt-8">
           Already have an account?{" "}
           <Link
             href="/login"

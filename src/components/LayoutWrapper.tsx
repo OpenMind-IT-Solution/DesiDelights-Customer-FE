@@ -8,9 +8,7 @@ export default function LayoutWrapper({children}: {children: React.ReactNode}) {
   const pathname = usePathname();
 
   const hideRoutes = [
-    "/login",
     "/forgot-password",
-    "/register",
     "/verify",
     "/reset-password",
     "/guest-login",
@@ -19,10 +17,12 @@ export default function LayoutWrapper({children}: {children: React.ReactNode}) {
   const hideLayout = hideRoutes.includes(pathname);
 
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       {!hideLayout && <Header />}
-      {children}
+      <main className="flex-grow">
+        {children}
+      </main>
       {!hideLayout && <Footer />}
-    </>
+    </div>
   );
 }
