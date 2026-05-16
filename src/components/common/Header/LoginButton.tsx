@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {useRouter} from "next/navigation";
+import {usePathname, useRouter} from "next/navigation";
 import {PiUserCircleFill} from "react-icons/pi";
 import {FiShoppingBag, FiEdit, FiKey, FiLogOut} from "react-icons/fi";
 import Button from "../Button/Button";
@@ -33,11 +33,17 @@ const LoginButton = () => {
     router.push("/");
   };
 
+  const pathname = usePathname();
+
   if (!user) {
+    const isLoginPage = pathname === "/login";
+    const buttonLink = isLoginPage ? "/register" : "/login";
+    const buttonText = isLoginPage ? "Sign Up" : t("login");
+
     return (
-      <Button link="/login">
+      <Button link={buttonLink} className="min-w-[140px] justify-center">
         <PiUserCircleFill size={22} />
-        {t("login")}
+        {buttonText}
       </Button>
     );
   }
