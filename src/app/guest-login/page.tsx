@@ -1,10 +1,26 @@
 "use client";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import {useRouter} from "next/navigation";
+import {useAuth} from "@/app/context/AuthContext";
 
 export default function GuestLogin() {
   const [mobile, setMobile] = useState("");
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
+      </div>
+    );
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +43,12 @@ export default function GuestLogin() {
             type="tel"
             placeholder="+91 9876543210"
             value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+              setMobile(cleaned);
+            }}
             required
+            maxLength={16}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 
             focus:outline-none focus:ring-2 focus:ring-[#FA664D] 
             focus:border-[#FA664D] transition mb-6"

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "@/app/context/AuthContext";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { signup } = useAuth();
+  const { signup, isAuthenticated, isLoading } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -20,11 +20,29 @@ export default function RegisterPage() {
 
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
+      </div>
+    );
+  }
+
   const phoneRegex = /^\+?[1-9]\d{11,14}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === "phone") {
+      value = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+    }
+    setForm({ ...form, [e.target.name]: value });
   };
 
   const handleRegister = async (e?: React.FormEvent) => {
@@ -120,6 +138,7 @@ export default function RegisterPage() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="e.g. +327123456789"
+                maxLength={16}
                 className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
               />

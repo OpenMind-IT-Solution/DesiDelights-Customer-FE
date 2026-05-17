@@ -8,7 +8,7 @@ import { useAuth } from "@/app/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, guestLogin } = useAuth();
+  const { login, guestLogin, isAuthenticated, isLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,12 +18,26 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  useEffect(() => {
     const savedEmail = localStorage.getItem("rememberedEmail");
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberMe(true);
     }
   }, []);
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#f5f5f5]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
+      </div>
+    );
+  }
 
   const phoneRegex = /^\+?[1-9]\d{11,14}$/;
 
@@ -184,7 +198,10 @@ export default function LoginPage() {
                   type="tel"
                   placeholder="e.g., +327123456789"
                   value={guestPhoneNumber}
-                  onChange={(e) => setGuestPhoneNumber(e.target.value)}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+                    setGuestPhoneNumber(cleaned);
+                  }}
                   maxLength={16}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                   focus:border-[#FA664D] transition bg-transparent"

@@ -28,7 +28,11 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    let value = e.target.value;
+    if (e.target.name === "phone") {
+      value = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
+    }
+    setForm({ ...form, [e.target.name]: value });
   };
 
   const handleUpdate = async () => {
@@ -90,6 +94,7 @@ export default function ProfilePage() {
               name="phone"
               value={form.phone}
               onChange={handleChange}
+              maxLength={16}
               className="w-full px-4 py-3 rounded-xl border border-gray-300 outline-none 
               focus:border-[#FA664D] transition"
             />
