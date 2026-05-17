@@ -18,4 +18,17 @@ export const ENDPOINTS = {
     MENU_ITEMS_LIST: '/website/menu-items/list',
     MENU_ITEM_DETAILS: (id: string) => `/website/menu-items/${id}`,
   },
+  ADDRESS: {
+    GET_ALL: '/website/addresses',
+    SAVE: '/website/addresses/save',
+    DELETE: (id: string) => `/website/addresses/${id}`,
+  },
+  COUPON: {
+    LIST: '/website/coupons',
+    VALIDATE: '/website/coupons/validate',
+  },
+  ORDER: {
+    PLACE: '/orders/place',
+    LIST: '/orders/list',
+  },
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import {GoogleMap, useLoadScript} from "@react-google-maps/api";
-import {useState, useEffect} from "react";
+import {useState, useEffect, useRef} from "react";
 import {FaTimes, FaSearch, FaHome, FaBriefcase} from "react-icons/fa";
 import {MdMoreHoriz} from "react-icons/md";
 
@@ -21,15 +21,54 @@ const defaultCenter = {
   lng: 4.37,
 };
 
+const libraries: any = ["places"];
+
 export default function AddressModal({show, onClose, onSave}: Props) {
   const {isLoaded} = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    libraries,
   });
 
   const [center, setCenter] = useState(defaultCenter);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [label, setLabel] = useState("Home");
   const [address, setAddress] = useState("");
+  const autocompleteRef = useRef<HTMLInputElement>(null);
+
+  // Initialize Autocomplete once loaded
+  useEffect(() => {
+    if (isLoaded && autocompleteRef.current) {
+      try {
+        const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
+          fields: ["formatted_address", "geometry", "name"],
+        });
+
+        autocomplete.addListener("place_changed", () => {
+          const place = autocomplete.getPlace();
+          if (place.geometry && place.geometry.location) {
+            const location = place.geometry.location;
+            const newCenter = {
+              lat: location.lat(),
+              lng: location.lng(),
+            };
+            setCenter(newCenter);
+            setAddress(place.formatted_address || place.name || "");
+            if (map) {
+              map.panTo(newCenter);
+              map.setZoom(17);
+            }
+          }
+        });
+      } catch (err) {
+        console.error(
+          "Google Maps Autocomplete failed to initialize. " +
+          "Please ensure that the legacy 'Places API' is enabled in your Google Cloud Console " +
+          "for this API Key (https://console.cloud.google.com/apis/library/places-backend.googleapis.com).",
+          err
+        );
+      }
+    }
+  }, [isLoaded, map]);
 
   // 🔥 RESET WHEN MODAL OPENS
   useEffect(() => {
@@ -78,6 +117,7 @@ export default function AddressModal({show, onClose, onSave}: Props) {
             <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3">
               <FaSearch className="text-gray-400 mr-3" />
               <input
+                ref={autocompleteRef}
                 type="text"
                 placeholder="Enter a location"
                 className="bg-transparent outline-none w-full text-sm"
