@@ -1,6 +1,8 @@
 "use client";
 
 import {createContext, useContext, useEffect, useState} from "react";
+import {useAuth} from "@/app/context/AuthContext";
+import {cartService} from "@/api/services/cartService";
 
 type CartItem = {
   size: any;
@@ -23,17 +25,44 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({children}: {children: React.ReactNode}) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("cart");
-      return stored ? JSON.parse(stored) : [];
-    }
-    return [];
-  });
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const {isAuthenticated, isLoading} = useAuth();
 
+  // Load user cart from database
+  const loadUserCart = async () => {
+    try {
+      const dbItems = await cartService.getCart();
+      if (dbItems) {
+        setCartItems(dbItems);
+      }
+    } catch (error) {
+      console.error("Failed to load user cart from DB:", error);
+    } finally {
+      setIsLoaded(true);
+    }
+  };
+
+  // Monitor auth changes and load/clear cart accordingly
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!isLoading) {
+      if (isAuthenticated) {
+        loadUserCart();
+      } else {
+        setCartItems([]);
+        setIsLoaded(true);
+      }
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Sync cart items to Database (if authenticated)
+  useEffect(() => {
+    if (isLoaded && isAuthenticated) {
+      cartService.syncCart(cartItems).catch((err) => {
+        console.error("Failed to sync cart to DB:", err);
+      });
+    }
+  }, [cartItems, isLoaded, isAuthenticated]);
 
   const addToCart = (item: Omit<CartItem, "qty">) => {
     setCartItems((prev) => {
@@ -47,7 +76,7 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     });
   };
 
-  const increaseQty = (id: number) => {
+  const increaseQty = (id: string | number) => {
     setCartItems((prev) =>
       prev.map((item) =>
         item.id === id ? {...item, qty: item.qty + 1} : item,
@@ -55,7 +84,7 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     );
   };
 
-  const decreaseQty = (id: number) => {
+  const decreaseQty = (id: string | number) => {
     setCartItems((prev) =>
       prev
         .map((item) => (item.id === id ? {...item, qty: item.qty - 1} : item))
@@ -63,7 +92,7 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     );
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: string | number) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 

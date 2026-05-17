@@ -2,6 +2,7 @@
 
 import {useCart} from "@/app/context/CartContext";
 import Image from "next/image";
+import { getCleanImageUrl } from "@/utils/image";
 import {FaMinus, FaPlus, FaTimes, FaTrash} from "react-icons/fa";
 import {useRouter} from "next/navigation";
 import {useState} from "react";
@@ -78,16 +79,13 @@ const CartDrawer = ({show, onClose}: Props) => {
               key={item.id}
               className="flex items-center gap-3 py-4 border-b"
             >
-              {item.image && (
-                <div className="relative w-14 h-14 rounded-md overflow-hidden">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
+              <div className="relative w-14 h-14 rounded-md overflow-hidden bg-gray-100 flex-shrink-0">
+                <img
+                  src={getCleanImageUrl(item.image)}
+                  alt={item.name}
+                  className="object-cover w-full h-full absolute inset-0"
+                />
+              </div>
 
               <div className="flex-1">
                 <p className="font-semibold">{item.name}</p>

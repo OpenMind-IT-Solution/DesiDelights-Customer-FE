@@ -2,6 +2,7 @@
 
 import {useCart} from "@/app/context/CartContext";
 import Image from "next/image";
+import { getCleanImageUrl } from "@/utils/image";
 import {SetStateAction, useState} from "react";
 import {FaPlus, FaMinus} from "react-icons/fa";
 import AddressModal from "@/components/AddressModal";
@@ -155,12 +156,11 @@ export default function CheckoutPage() {
             {cartItems.map((item) => (
               <div key={item.id} className="flex justify-between mb-4">
                 <div className="flex gap-3">
-                  <div className="relative w-14 h-14">
-                    <Image
-                      src={item.image || "/fallback.png"}
+                  <div className="relative w-14 h-14 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+                    <img
+                      src={getCleanImageUrl(item.image)}
                       alt={item.name}
-                      fill
-                      className="rounded-md object-cover"
+                      className="object-cover w-full h-full absolute inset-0"
                     />
                   </div>
 

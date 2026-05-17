@@ -6,6 +6,7 @@ import {FaTimes} from "react-icons/fa";
 import {useCart} from "@/app/context/CartContext";
 
 import { MenuItem } from "@/types/api";
+import { getCleanImageUrl } from "@/utils/image";
 
 type Props = {
   item: MenuItem | null;
@@ -43,7 +44,7 @@ const MenuItemModal = ({item, onClose}: Props) => {
           id: item.id,
           name: item.name,
           price: item.price,
-          image: item.image || "/images/placeholder.png",
+          image: getCleanImageUrl(item.image),
           size: null,
         });
     }
@@ -69,11 +70,10 @@ const MenuItemModal = ({item, onClose}: Props) => {
 
         <div className="flex gap-4 mb-4">
           <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
-            <Image
-              src={item.image || "/images/placeholder.png"}
+            <img
+              src={getCleanImageUrl(item.image)}
               alt={item.name}
-              fill
-              className="object-cover"
+              className="object-cover w-full h-full absolute inset-0"
             />
           </div>
 

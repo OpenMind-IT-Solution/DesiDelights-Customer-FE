@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         port: '3009',
         pathname: '/api/images/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '3009',
+        pathname: '/upload/**',
+      },
     ],
   },
 };
