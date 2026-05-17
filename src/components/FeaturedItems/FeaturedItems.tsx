@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import MenuItemModal from "../MenuItemModel";
 import { websiteService } from "@/api/services/websiteService";
 import { MenuItem } from "@/types/api";
+import { getCleanImageUrl } from "@/utils/image";
 
 const FeaturedItems = () => {
   const {t} = useLanguage();
@@ -53,11 +54,10 @@ const FeaturedItems = () => {
                 className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
               >
                 <div className="relative w-full h-40 bg-gray-100">
-                  <Image
-                    src={item.image || "/images/placeholder.png"}
+                  <img
+                    src={getCleanImageUrl(item.image)}
                     alt={item.name}
-                    fill
-                    className="object-cover"
+                    className="object-cover w-full h-full absolute inset-0"
                   />
                 </div>
 

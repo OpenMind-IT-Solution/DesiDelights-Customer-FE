@@ -8,6 +8,10 @@ export const ENDPOINTS = {
     GET_PROFILE: '/customers/profile',
     UPDATE_PROFILE: '/customers/update-profile',
   },
+  CART: {
+    GET: '/website/cart',
+    SYNC: '/website/cart/sync',
+  },
   WEBSITE: {
     CATEGORIES_LIST: '/website/categories/list',
     CATEGORY_DETAILS: (id: string) => `/website/categories/${id}`,
