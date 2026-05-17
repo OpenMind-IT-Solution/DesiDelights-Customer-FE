@@ -19,4 +19,12 @@ export const websiteService = {
     const response = await apiClient.get<any>(ENDPOINTS.WEBSITE.MENU_ITEM_DETAILS(id));
     return response.data.data;
   },
+  getCoupons: async () => {
+    const response = await apiClient.get<any>(ENDPOINTS.COUPON.LIST);
+    return response.data.data?.coupons || [];
+  },
+  validateCoupon: async (couponCode: string, subtotal: number) => {
+    const response = await apiClient.post<any>(ENDPOINTS.COUPON.VALIDATE, { couponCode, subtotal });
+    return response.data.data;
+  },
 };
