@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import "swiper/css";
 import "swiper/css/pagination";
 import {Autoplay, Navigation, Pagination} from "swiper/modules";
@@ -20,12 +19,10 @@ const ImageSlider = ({slides}: {slides: string[]}) => {
     >
       {slides.map((src, index) => (
         <SwiperSlide key={index}>
-          <Image
+          <img
             src={src}
             alt={`Slide ${index + 1}`}
             className="w-full h-full object-cover rounded-md"
-            width={2200}
-            height={833}
           />
         </SwiperSlide>
       ))}
