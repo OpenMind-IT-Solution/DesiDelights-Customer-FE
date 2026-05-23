@@ -12,6 +12,20 @@ import { websiteService } from "@/api/services/websiteService";
 import { MenuItem } from "@/types/api";
 import { getCleanImageUrl } from "@/utils/image";
 
+// Helper utility to calculate discounted prices on the fly
+const getPriceDetails = (price: number, offer?: string) => {
+  if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
+  
+  const percentMatch = offer.match(/(\d+)%\s*OFF/i);
+  if (percentMatch) {
+    const percent = parseInt(percentMatch[1], 10);
+    const finalPrice = price * (1 - percent / 100);
+    return { originalPrice: price, finalPrice, hasDiscount: true };
+  }
+  
+  return { originalPrice: price, finalPrice: price, hasDiscount: false };
+};
+
 const FeaturedItems = () => {
   const {t} = useLanguage();
   const {cartItems, increaseQty, decreaseQty} = useCart();
@@ -41,17 +55,18 @@ const FeaturedItems = () => {
 
   return (
     <section className="py-10 md:py-14">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         <h2 className="text-3xl font-black mb-8">{t("featuredItems")}</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
           {featuredItems.map((item) => {
             const cartItem = cartItems.find((i) => i.id === item.id);
+            const { originalPrice, finalPrice, hasDiscount } = getPriceDetails(item.price, item.offer);
 
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col"
+                className="bg-white rounded-2xl shadow-md overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="relative w-full h-40 bg-gray-100">
                   <img
@@ -59,34 +74,52 @@ const FeaturedItems = () => {
                     alt={item.name}
                     className="object-cover w-full h-full absolute inset-0"
                   />
+                  {hasDiscount && (
+                    <span className="absolute top-3 left-3 z-10 text-[9px] font-black text-white bg-green-600 px-2 py-0.5 rounded shadow-sm uppercase tracking-wider">
+                      {item.offer}
+                    </span>
+                  )}
                 </div>
 
                 <div className="p-4 flex flex-col grow">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-semibold">{item.name}</h3>
+                    <h3 className="font-semibold text-gray-800 line-clamp-1">{item.name}</h3>
                     <FaInfoCircle
                       onClick={() => setSelectedItem(item)}
-                      className="cursor-pointer text-gray-400"
+                      className="cursor-pointer text-gray-400 hover:text-[var(--primary-color)] transition-colors"
                     />
                   </div>
 
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2 mt-1">
                     {item.description}
                   </p>
 
                   <div className="flex justify-between items-center mt-auto">
-                    <span className="text-[var(--primary-color)] font-semibold">
-                      €{item.price.toFixed(2)}
-                    </span>
+                    <div className="flex flex-col">
+                      {hasDiscount ? (
+                        <>
+                          <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
+                            €{originalPrice.toFixed(2)}
+                          </span>
+                          <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
+                            €{finalPrice.toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
+                          €{item.price.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
 
                     {cartItem ? (
-                      <div className="flex items-center gap-2 bg-[var(--primary-color)] text-white px-3 py-1 rounded-full">
-                        <button onClick={() => decreaseQty(item.id)}>-</button>
+                      <div className="flex items-center gap-2 bg-[var(--primary-color)] text-white px-3 py-1 rounded-full text-xs font-semibold">
+                        <button onClick={() => decreaseQty(item.id)} className="hover:scale-110 transition-transform px-1">-</button>
                         <span>{cartItem.qty}</span>
-                        <button onClick={() => increaseQty(item.id)}>+</button>
+                        <button onClick={() => increaseQty(item.id)} className="hover:scale-110 transition-transform px-1">+</button>
                       </div>
                     ) : (
-                      <Button onClick={() => setSelectedItem(item)}>
+                      <Button onClick={() => setSelectedItem(item)} className="!py-1.5 !px-3.5 text-xs font-bold rounded-full">
                         <PiBagSimpleFill /> Add
                       </Button>
                     )}

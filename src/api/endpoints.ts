@@ -17,6 +17,7 @@ export const ENDPOINTS = {
     CATEGORY_DETAILS: (id: string) => `/website/categories/${id}`,
     MENU_ITEMS_LIST: '/website/menu-items/list',
     MENU_ITEM_DETAILS: (id: string) => `/website/menu-items/${id}`,
+    RESTAURANT_BANNERS: (restaurantId: number | string) => `/website/restaurants/${restaurantId}/banners`,
   },
   ADDRESS: {
     GET_ALL: '/website/addresses',
