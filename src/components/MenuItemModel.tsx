@@ -13,6 +13,19 @@ type Props = {
   onClose: () => void;
 };
 
+const getPriceDetails = (price: number, offer?: string) => {
+  if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
+  
+  const percentMatch = offer.match(/(\d+)%\s*OFF/i);
+  if (percentMatch) {
+    const percent = parseInt(percentMatch[1], 10);
+    const finalPrice = price * (1 - percent / 100);
+    return { originalPrice: price, finalPrice, hasDiscount: true };
+  }
+  
+  return { originalPrice: price, finalPrice: price, hasDiscount: false };
+};
+
 const MenuItemModal = ({item, onClose}: Props) => {
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState("");
@@ -35,15 +48,16 @@ const MenuItemModal = ({item, onClose}: Props) => {
 
   if (!item) return null;
 
-  const basePrice = item.price;
-  const totalPrice = (basePrice * qty).toFixed(2);
+  const { finalPrice: discountedPrice, hasDiscount } = getPriceDetails(item.price, item.offer);
+  const totalPrice = (discountedPrice * qty).toFixed(2);
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
         addToCart({
           id: item.id,
           name: item.name,
-          price: item.price,
+          price: discountedPrice,
+          originalPrice: item.price,
           image: getCleanImageUrl(item.image),
           size: null,
         });
@@ -63,29 +77,42 @@ const MenuItemModal = ({item, onClose}: Props) => {
       >
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 text-[var(--primary-color)] hover:scale-110 transition"
+          className="absolute right-5 top-5 text-[var(--primary-color)] hover:scale-110 transition cursor-pointer"
         >
           <FaTimes size={18} />
         </button>
-
+ 
         <div className="flex gap-4 mb-4">
-          <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100">
+          <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
             <img
               src={getCleanImageUrl(item.image)}
               alt={item.name}
               className="object-cover w-full h-full absolute inset-0"
             />
           </div>
-
+ 
           <div>
             <h2 className="text-lg font-bold">{item.name}</h2>
-
-            <p className="text-lg font-semibold text-[var(--primary-color)] mt-1">
-              €{basePrice.toFixed(2)}
-            </p>
+ 
+            <div className="flex gap-2 items-baseline mt-1">
+              {hasDiscount ? (
+                <>
+                  <span className="text-gray-400 line-through text-sm font-semibold">
+                    €{item.price.toFixed(2)}
+                  </span>
+                  <span className="text-lg font-semibold text-[var(--primary-color)]">
+                    €{discountedPrice.toFixed(2)}
+                  </span>
+                </>
+              ) : (
+                <span className="text-lg font-semibold text-[var(--primary-color)]">
+                  €{item.price.toFixed(2)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-
+ 
         <p className="text-gray-600 text-sm mb-6">{item.description}</p>
 
         <div className="flex items-center gap-4 mb-6">

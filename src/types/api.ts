@@ -27,6 +27,8 @@ export interface MenuItem {
   images?: string[];
   categoryId: string;
   isActive: boolean;
+  tag?: string;
+  offer?: string;
 }
 
 export interface AuthResponse {

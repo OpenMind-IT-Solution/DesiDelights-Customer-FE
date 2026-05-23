@@ -29,6 +29,13 @@ const CartDrawer = ({show, onClose}: Props) => {
     0,
   );
 
+  const originalSubtotal = cartItems.reduce(
+    (acc, item) => acc + (item.originalPrice || item.price) * item.qty,
+    0,
+  );
+
+  const totalDiscount = originalSubtotal - subtotal;
+
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose}></div>
@@ -88,10 +95,26 @@ const CartDrawer = ({show, onClose}: Props) => {
               </div>
 
               <div className="flex-1">
-                <p className="font-semibold">{item.name}</p>
-                <p className="text-sm text-gray-500">
-                  €{item.price.toFixed(2)}
-                </p>
+                <p className="font-semibold text-sm text-gray-800">{item.name}</p>
+                <div className="flex gap-2 items-center flex-wrap mt-0.5">
+                  {item.originalPrice && item.originalPrice > item.price ? (
+                    <>
+                      <span className="text-xs text-gray-400 line-through">
+                        €{item.originalPrice.toFixed(2)}
+                      </span>
+                      <span className="text-sm font-bold text-[var(--primary-color)]">
+                        €{item.price.toFixed(2)}
+                      </span>
+                      <span className="text-[9px] font-black text-green-700 bg-green-100/60 px-1.5 py-0.5 rounded-md tracking-wider">
+                        {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-gray-500 font-medium">
+                      €{item.price.toFixed(2)}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
@@ -123,11 +146,29 @@ const CartDrawer = ({show, onClose}: Props) => {
             </div>
           ))}
         </div>
-        <div className="p-5 border-t">
-          <div className="flex justify-between mb-4 font-semibold">
-            <span>Subtotal</span>
-            <span className="text-green-600">€{subtotal.toFixed(2)}</span>
-          </div>
+        <div className="p-5 border-t bg-gray-50/20">
+          {totalDiscount > 0 ? (
+            <div className="space-y-2.5 mb-5 text-sm text-gray-600">
+              <div className="flex justify-between font-medium">
+                <span>Subtotal</span>
+                <span>€{originalSubtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-green-600 font-semibold">
+                <span>Discount</span>
+                <span>-€{totalDiscount.toFixed(2)}</span>
+              </div>
+              <hr className="border-gray-100/60" />
+              <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
+                <span>Total</span>
+                <span className="text-[var(--primary-color)]">€{subtotal.toFixed(2)}</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-between mb-4 font-bold text-gray-800">
+              <span>Subtotal</span>
+              <span className="text-[var(--primary-color)] font-extrabold">€{subtotal.toFixed(2)}</span>
+            </div>
+          )}
 
           <button
             onClick={() => {

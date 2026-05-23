@@ -9,6 +9,7 @@ type CartItem = {
   id: string | number;
   name: string;
   price: number;
+  originalPrice?: number;
   image: string;
   qty: number;
 };
@@ -30,12 +31,45 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const {isAuthenticated, isLoading} = useAuth();
 
-  // Load user cart from database
+  // Load user cart from database and merge with guest cart
   const loadUserCart = async () => {
     try {
-      const dbItems = await cartService.getCart();
-      if (dbItems) {
-        setCartItems(dbItems);
+      const dbItems = (await cartService.getCart()) || [];
+      const savedGuestCart = localStorage.getItem("guest_cart");
+      let mergedItems = [...dbItems];
+      let hasMerged = false;
+
+      if (savedGuestCart) {
+        try {
+          const guestItems: CartItem[] = JSON.parse(savedGuestCart);
+          if (Array.isArray(guestItems) && guestItems.length > 0) {
+            guestItems.forEach((guestItem) => {
+              const existingIdx = mergedItems.findIndex(
+                (dbItem) => dbItem.id === guestItem.id,
+              );
+              if (existingIdx > -1) {
+                mergedItems[existingIdx] = {
+                  ...mergedItems[existingIdx],
+                  qty: mergedItems[existingIdx].qty + guestItem.qty,
+                };
+              } else {
+                mergedItems.push(guestItem);
+              }
+            });
+            hasMerged = true;
+            localStorage.removeItem("guest_cart");
+          }
+        } catch (e) {
+          console.error("Failed to parse guest cart:", e);
+        }
+      }
+
+      setCartItems(mergedItems);
+
+      if (hasMerged && mergedItems.length > 0) {
+        await cartService.syncCart(mergedItems).catch((err) => {
+          console.error("Failed to sync merged cart:", err);
+        });
       }
     } catch (error) {
       console.error("Failed to load user cart from DB:", error);
@@ -50,18 +84,37 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
       if (isAuthenticated) {
         loadUserCart();
       } else {
-        setCartItems([]);
+        const savedGuestCart = localStorage.getItem("guest_cart");
+        if (savedGuestCart) {
+          try {
+            const guestItems = JSON.parse(savedGuestCart);
+            if (Array.isArray(guestItems)) {
+              setCartItems(guestItems);
+            } else {
+              setCartItems([]);
+            }
+          } catch (e) {
+            console.error("Failed to parse guest cart:", e);
+            setCartItems([]);
+          }
+        } else {
+          setCartItems([]);
+        }
         setIsLoaded(true);
       }
     }
   }, [isAuthenticated, isLoading]);
 
-  // Sync cart items to Database (if authenticated)
+  // Sync cart items to localStorage (if guest) or Database (if authenticated)
   useEffect(() => {
-    if (isLoaded && isAuthenticated) {
-      cartService.syncCart(cartItems).catch((err) => {
-        console.error("Failed to sync cart to DB:", err);
-      });
+    if (isLoaded) {
+      if (isAuthenticated) {
+        cartService.syncCart(cartItems).catch((err) => {
+          console.error("Failed to sync cart to DB:", err);
+        });
+      } else {
+        localStorage.setItem("guest_cart", JSON.stringify(cartItems));
+      }
     }
   }, [cartItems, isLoaded, isAuthenticated]);
 

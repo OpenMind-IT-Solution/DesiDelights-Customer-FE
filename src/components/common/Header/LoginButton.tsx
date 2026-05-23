@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useState, useRef} from "react";
 import {usePathname, useRouter} from "next/navigation";
 import {PiUserCircleFill} from "react-icons/pi";
 import {FiShoppingBag, FiEdit, FiKey, FiLogOut} from "react-icons/fi";
@@ -14,6 +14,22 @@ const LoginButton = () => {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   const handleLogout = () => {
     logout();
@@ -29,22 +45,22 @@ const LoginButton = () => {
     const buttonText = isLoginPage ? "Sign Up" : t("login");
 
     return (
-      <Button link={buttonLink} className="min-w-[140px] justify-center">
+      <Button link={buttonLink} className="min-w-0 px-3 justify-center sm:min-w-[140px]">
         <PiUserCircleFill size={22} />
-        {buttonText}
+        <span className="hidden sm:inline">{buttonText}</span>
       </Button>
     );
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all"
+        className="flex items-center gap-1.5 bg-primary text-white px-3 sm:px-5 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all cursor-pointer"
       >
         <PiUserCircleFill size={22} />
-        Account
-        <span className="ml-1">{open ? "▴" : "▾"}</span>
+        <span className="hidden sm:inline">Account</span>
+        <span className="ml-0.5 sm:ml-1">{open ? "▴" : "▾"}</span>
       </button>
 
       {open && (

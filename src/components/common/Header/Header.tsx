@@ -16,7 +16,7 @@ const Header = () => {
   return (
     <>
       <header className="sticky top-0 shadow-md py-3 sm:py-4 bg-white z-50">
-        <div className="px-4 sm:px-8 lg:px-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
           <div className="flex justify-between items-center gap-4 sm:gap-6">
             <Link href="/" className="flex-shrink-0 cursor-pointer">
               <Image 

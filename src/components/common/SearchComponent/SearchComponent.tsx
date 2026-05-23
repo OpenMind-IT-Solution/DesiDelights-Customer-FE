@@ -1,12 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { FaSearch, FaSpinner } from "react-icons/fa";
+import { FaSearch, FaSpinner, FaUtensils } from "react-icons/fa";
 import { IoCloseOutline } from "react-icons/io5";
 import { websiteService } from "@/api/services/websiteService";
 import { MenuItem } from "@/types/api";
 import { getCleanImageUrl } from "@/utils/image";
 import MenuItemModal from "@/components/MenuItemModel";
+
+// Helper utility to calculate discounted prices on the fly
+const getPriceDetails = (price: number, offer?: string) => {
+  if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
+  
+  const percentMatch = offer.match(/(\d+)%\s*OFF/i);
+  if (percentMatch) {
+    const percent = parseInt(percentMatch[1], 10);
+    const finalPrice = price * (1 - percent / 100);
+    return { originalPrice: price, finalPrice, hasDiscount: true };
+  }
+  
+  return { originalPrice: price, finalPrice: price, hasDiscount: false };
+};
 
 const SearchComponent = () => {
   const [query, setQuery] = useState("");
@@ -108,42 +122,58 @@ const SearchComponent = () => {
                 Dishes Found ({results.length})
               </div>
               <div className="max-h-[360px] overflow-y-auto custom-scrollbar">
-                {results.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => {
-                      setSelectedItem(item);
-                      setIsOpen(false);
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50/40 cursor-pointer transition-all duration-150 border-b border-gray-50/60 last:border-b-0"
-                  >
-                    <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-                      <img
-                        src={getCleanImageUrl(item.image)}
-                        alt={item.name}
-                        className="object-cover w-full h-full absolute inset-0"
-                      />
-                    </div>
-                    
-                    <div className="flex-grow min-w-0">
-                      <h4 className="font-semibold text-gray-800 text-sm leading-tight truncate">
-                        {item.name}
-                      </h4>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
-                        {item.description}
-                      </p>
-                    </div>
+                {results.map((item) => {
+                  const { originalPrice, finalPrice, hasDiscount } = getPriceDetails(item.price, item.offer);
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setIsOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50/40 cursor-pointer transition-all duration-150 border-b border-gray-50/60 last:border-b-0"
+                    >
+                      <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
+                        <img
+                          src={getCleanImageUrl(item.image)}
+                          alt={item.name}
+                          className="object-cover w-full h-full absolute inset-0"
+                        />
+                      </div>
+                      
+                      <div className="flex-grow min-w-0">
+                        <h4 className="font-semibold text-gray-800 text-sm leading-tight truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-xs text-gray-400 truncate mt-0.5">
+                          {item.description}
+                        </p>
+                      </div>
 
-                    <div className="flex-shrink-0 text-sm font-bold text-[var(--primary-color)]">
-                      €{item.price.toFixed(2)}
+                      <div className="flex-shrink-0 text-right flex flex-col justify-center">
+                        {hasDiscount ? (
+                          <>
+                            <span className="text-[10px] text-gray-400 line-through leading-none mb-0.5">
+                              €{originalPrice.toFixed(2)}
+                            </span>
+                            <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
+                              €{finalPrice.toFixed(2)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
+                            €{item.price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : query.trim() ? (
             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-              <span className="text-3xl mb-2">🍽️</span>
+              <FaUtensils className="text-3xl text-gray-300 mb-2 animate-pulse" />
               <h5 className="font-semibold text-gray-700 text-sm">No items found</h5>
               <p className="text-xs text-gray-400 mt-1 max-w-[240px]">
                 We couldn't find any dishes matching "{query}". Try searching for something else!

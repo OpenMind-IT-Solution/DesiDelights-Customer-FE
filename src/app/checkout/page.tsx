@@ -4,7 +4,7 @@ import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { getCleanImageUrl } from "@/utils/image";
 import { useState, useEffect } from "react";
-import { FaPlus, FaMinus, FaTrash, FaCheckCircle, FaMapMarkerAlt } from "react-icons/fa";
+import { FaPlus, FaMinus, FaTrash, FaCheckCircle, FaMapMarkerAlt, FaTag, FaGift } from "react-icons/fa";
 import AddressModal from "@/components/AddressModal";
 import TimeModal from "@/components/TimeModal";
 import CouponModal from "@/components/CouponModal";
@@ -93,14 +93,22 @@ export default function CheckoutPage() {
     }
   };
 
+  const originalSubtotal = cartItems.reduce(
+    (acc, item) => acc + (item.originalPrice || item.price) * item.qty,
+    0
+  );
+
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.qty,
     0
   );
 
+  const itemDiscount = originalSubtotal - subtotal;
+
   // Calculate dynamic values
   const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 5) : 0;
   const total = subtotal - couponDiscount + deliveryCharge;
+
 
   // Handle Coupon Selection / Validation
   const handleApplyCoupon = async (code: string) => {
@@ -140,7 +148,7 @@ export default function CheckoutPage() {
         restaurantId: 1, // Default main restaurant
         orderType,
         deliveryAddress: selectedAddress,
-        deliveryTime: formattedTime,
+        deliveryTime: formattedTime || undefined,
         couponCode: appliedCouponCode || undefined,
         items: cartItems.map((item) => ({
           menuItemId: Number(item.id),
@@ -182,21 +190,33 @@ export default function CheckoutPage() {
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span>
-              <span>${(successOrder.subtotal || subtotal).toFixed(2)}</span>
+              <span>€{(successOrder.subtotal || originalSubtotal).toFixed(2)}</span>
             </div>
+            {successOrder.itemDiscount > 0 && (
+              <div className="flex justify-between text-sm text-green-600 font-semibold">
+                <span>Discount (Promo)</span>
+                <span>-€{successOrder.itemDiscount.toFixed(2)}</span>
+              </div>
+            )}
             {successOrder.discount > 0 && (
               <div className="flex justify-between text-sm text-green-600 font-semibold">
-                <span>Discount</span>
-                <span>-${successOrder.discount.toFixed(2)}</span>
+                <span>Discount (Coupon)</span>
+                <span>-€{successOrder.discount.toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-sm text-gray-600">
               <span>Delivery Charge</span>
-              <span>${successOrder.deliveryCharge.toFixed(2)}</span>
+              <span>
+                {successOrder.deliveryCharge === 0 ? (
+                  <span className="text-green-600 font-bold">FREE</span>
+                ) : (
+                  `€${successOrder.deliveryCharge.toFixed(2)}`
+                )}
+              </span>
             </div>
             <div className="flex justify-between pt-2 border-t font-bold text-lg text-gray-800">
               <span>Grand Total</span>
-              <span>${successOrder.totalAmount.toFixed(2)}</span>
+              <span className="text-[#FA664D] font-extrabold">€{successOrder.totalAmount.toFixed(2)}</span>
             </div>
           </div>
 
@@ -213,7 +233,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="bg-[#f5f6f8] min-h-screen py-10">
-      <div className="max-w-[1200px] mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
         {/* Not Logged In Warning */}
@@ -408,7 +428,25 @@ export default function CheckoutPage() {
                           </div>
                           <div>
                             <p className="text-xs font-bold text-gray-800 line-clamp-1">{item.name}</p>
-                            <p className="text-[10px] text-gray-400">${item.price.toFixed(2)} each</p>
+                             <div className="flex gap-1.5 items-center flex-wrap">
+                              {item.originalPrice && item.originalPrice > item.price ? (
+                                <>
+                                  <span className="text-[9px] text-gray-400 line-through">
+                                    €{item.originalPrice.toFixed(2)}
+                                  </span>
+                                  <span className="text-[10px] text-[var(--primary-color)] font-bold">
+                                    €{item.price.toFixed(2)} each
+                                  </span>
+                                  <span className="text-[8px] font-black text-green-700 bg-green-100/50 px-1.5 py-0.5 rounded-md tracking-wider">
+                                    {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
+                                  </span>
+                                </>
+                              ) : (
+                                <span className="text-[10px] text-gray-400">
+                                  €{item.price.toFixed(2)} each
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
@@ -436,17 +474,37 @@ export default function CheckoutPage() {
                   {/* Coupon Selector */}
                   <div
                     onClick={() => setShowCouponModal(true)}
-                    className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex justify-between cursor-pointer hover:bg-gray-100/50 transition mb-6"
+                    className={`border rounded-2xl p-4 flex justify-between items-center cursor-pointer transition mb-6 ${
+                      appliedCouponCode 
+                        ? "bg-green-50/30 border-green-200 hover:bg-green-50/50" 
+                        : "bg-gray-50 border border-gray-100 hover:bg-gray-100/50"
+                    }`}
                   >
-                    <div>
-                      <p className="text-xs font-bold text-gray-700">
-                        {appliedCouponCode ? `Coupon Applied: ${appliedCouponCode}` : "Select Offer/Apply Coupon"}
-                      </p>
-                      <p className="text-[10px] text-gray-400">
-                        {appliedCouponCode ? "Coupon active. Discount deducted!" : "Get discount with your order"}
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl flex items-center justify-center">
+                        {appliedCouponCode ? (
+                          <FaGift className="text-green-600 animate-bounce" size={20} />
+                        ) : (
+                          <FaTag className="text-gray-400 rotate-90" size={20} />
+                        )}
+                      </span>
+                      <div>
+                        <p className={`text-xs font-extrabold ${appliedCouponCode ? "text-green-800" : "text-gray-700"}`}>
+                          {appliedCouponCode ? `Coupon Applied: ${appliedCouponCode}` : "Select Offer / Apply Coupon"}
+                        </p>
+                        <p className={`text-[10px] ${appliedCouponCode ? "text-green-600 font-semibold" : "text-gray-400"}`}>
+                          {appliedCouponCode ? `You saved €${couponDiscount.toFixed(2)} on your order!` : "Unlock discounts with your order"}
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-[#FA664D] font-bold">›</span>
+                    <div className="flex items-center gap-2">
+                      {appliedCouponCode && (
+                        <span className="text-[10px] font-black uppercase bg-green-200 text-green-800 px-2.5 py-1 rounded-md tracking-wider">
+                          SAVED €{couponDiscount.toFixed(2)}
+                        </span>
+                      )}
+                      <span className="text-[#FA664D] font-bold">›</span>
+                    </div>
                   </div>
 
                   {couponError && (
@@ -457,13 +515,20 @@ export default function CheckoutPage() {
                   <div className="space-y-3 text-sm text-gray-600 mb-6">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span className="font-semibold text-gray-800">${subtotal.toFixed(2)}</span>
+                      <span className="font-semibold text-gray-800">€{originalSubtotal.toFixed(2)}</span>
                     </div>
+
+                    {itemDiscount > 0 && (
+                      <div className="flex justify-between text-green-600 font-semibold">
+                        <span>Discount (Promo)</span>
+                        <span>-€{itemDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
 
                     {couponDiscount > 0 && (
                       <div className="flex justify-between text-green-600 font-semibold">
                         <span>Discount ({appliedCouponCode})</span>
-                        <span>-${couponDiscount.toFixed(2)}</span>
+                        <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
 
@@ -474,19 +539,19 @@ export default function CheckoutPage() {
                       ) : deliveryCharge === 0 ? (
                         <span className="text-green-600 font-bold">FREE DELIVERY</span>
                       ) : (
-                        <span className="font-semibold text-gray-800">${deliveryCharge.toFixed(2)}</span>
+                        <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
                       )}
                     </div>
 
                     {orderType === "delivery" && subtotal <= 30 && (
-                      <p className="text-[10px] text-gray-400 text-right italic">Add ${(30 - subtotal).toFixed(2)} more for free delivery!</p>
+                      <p className="text-[10px] text-gray-400 text-right italic font-medium">Add €{(30 - subtotal).toFixed(2)} more for free delivery!</p>
                     )}
 
                     <hr className="border-gray-100" />
 
                     <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
                       <span>Total Amount</span>
-                      <span>${total.toFixed(2)}</span>
+                      <span className="text-[#FA664D] font-extrabold">€{total.toFixed(2)}</span>
                     </div>
                   </div>
 

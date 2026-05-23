@@ -72,14 +72,14 @@ export default function OrdersPage() {
   // Loading state (skeleton screens)
   if (authLoading || (isAuthenticated && loading)) {
     return (
-      <div className="w-full min-h-screen bg-gray-50 px-6 sm:px-12 lg:px-16 py-8">
-        <button
-          onClick={() => router.push("/")}
-          className="text-pink-500 mb-6 text-sm font-semibold hover:underline flex items-center gap-1 transition"
-        >
-          ← Back to Home
-        </button>
-        <div className="max-w-6xl mx-auto animate-pulse">
+      <div className="w-full min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20 animate-pulse">
+          <button
+            onClick={() => router.push("/")}
+            className="text-pink-500 mb-6 text-sm font-semibold hover:underline flex items-center gap-1 transition"
+          >
+            ← Back to Home
+          </button>
           <div className="h-8 bg-gray-200 rounded w-1/4 mb-10"></div>
           <div className="flex flex-col lg:flex-row gap-10">
             <div className="w-full lg:w-1/2 space-y-6">
@@ -143,16 +143,16 @@ export default function OrdersPage() {
   });
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 px-6 sm:px-12 lg:px-16 py-8">
-      {/* BACK TO HOME */}
-      <button
-        onClick={() => router.push("/")}
-        className="text-pink-500 mb-8 text-sm font-semibold hover:underline flex items-center gap-1 transition-all duration-200 hover:translate-x-[-4px]"
-      >
-        ← Back to Home
-      </button>
+    <div className="w-full min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
+        {/* BACK TO HOME */}
+        <button
+          onClick={() => router.push("/")}
+          className="text-pink-500 mb-8 text-sm font-semibold hover:underline flex items-center gap-1 transition-all duration-200 hover:translate-x-[-4px]"
+        >
+          ← Back to Home
+        </button>
 
-      <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-extrabold text-gray-800 mb-10 tracking-tight flex items-center gap-3">
           <span className="w-2.5 h-8 bg-teal-500 rounded-full"></span>
           My Orders

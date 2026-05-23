@@ -27,4 +27,8 @@ export const websiteService = {
     const response = await apiClient.post<any>(ENDPOINTS.COUPON.VALIDATE, { couponCode, subtotal });
     return response.data.data;
   },
+  getRestaurantBanners: async (restaurantId: number | string) => {
+    const response = await apiClient.get<any>(ENDPOINTS.WEBSITE.RESTAURANT_BANNERS(restaurantId));
+    return response.data.data?.banners || [];
+  },
 };
