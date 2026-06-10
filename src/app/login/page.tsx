@@ -31,15 +31,15 @@ export default function LoginPage() {
     }
   }, []);
 
-  if (isLoading || isAuthenticated) {
-    return (
-      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#f5f5f5]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
-      </div>
-    );
-  }
+  const normalizePhone = (value: string) => {
+    let cleaned = value.replace(/[^+\d]/g, "").replace(/(?!^)\+/g, "");
+    if (cleaned.startsWith("00")) {
+      cleaned = "+" + cleaned.slice(2);
+    }
+    return cleaned;
+  };
 
-  const phoneRegex = /^\+?[1-9]\d{11,14}$/;
+  const phoneRegex = /^(?:\+|00)?[1-9]\d{7,14}$/;
 
   const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -67,16 +67,27 @@ export default function LoginPage() {
     }
   };
 
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#f5f5f5]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
+      </div>
+    );
+  }
+
   const handleGuestLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!guestPhoneNumber || !phoneRegex.test(guestPhoneNumber)) {
+
+    const normalizedPhone = normalizePhone(guestPhoneNumber).trim();
+
+    if (!normalizedPhone || !phoneRegex.test(normalizedPhone)) {
       toast.error("Please enter a valid phone number with country code");
       return;
     }
 
     try {
       setLoading(true);
-      await guestLogin(guestPhoneNumber);
+      await guestLogin(normalizedPhone);
       toast.success("Guest login successful ✅");
       router.push("/");
     } catch (error: any) {
@@ -97,7 +108,9 @@ export default function LoginPage() {
           <>
             <form onSubmit={handleLogin}>
               <div className="mb-5 sm:mb-6">
-                <label className="text-sm text-gray-500 mb-2 block">Email</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Email
+                </label>
                 <input
                   type="email"
                   placeholder="Enter email"
@@ -109,7 +122,9 @@ export default function LoginPage() {
               </div>
 
               <div className="mb-4 sm:mb-5">
-                <label className="text-sm text-gray-500 mb-2 block">Password</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Password
+                </label>
                 <input
                   type="password"
                   placeholder="Enter password"
@@ -121,15 +136,15 @@ export default function LoginPage() {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-sm mb-6 sm:mb-8">
-              <label className="flex items-center gap-2 text-gray-500 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-[#FA664D]" 
-                />
-                Remember Me
-              </label>
+                <label className="flex items-center gap-2 text-gray-500 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="accent-[#FA664D]"
+                  />
+                  Remember Me
+                </label>
 
                 <Link
                   href="/forgot-password"
@@ -193,14 +208,15 @@ export default function LoginPage() {
 
             <form onSubmit={handleGuestLogin}>
               <div className="mb-8">
-                <label className="text-sm text-gray-500 mb-2 block">Phone Number</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Phone Number
+                </label>
                 <input
                   type="tel"
                   placeholder="e.g., +327123456789"
                   value={guestPhoneNumber}
                   onChange={(e) => {
-                    const cleaned = e.target.value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
-                    setGuestPhoneNumber(cleaned);
+                    setGuestPhoneNumber(normalizePhone(e.target.value));
                   }}
                   maxLength={16}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
@@ -210,7 +226,9 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                disabled={loading || !phoneRegex.test(guestPhoneNumber)}
+                disabled={
+                  loading || !phoneRegex.test(normalizePhone(guestPhoneNumber))
+                }
                 className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
                 hover:bg-[#e85a43] transition-all duration-200 shadow-md hover:shadow-lg 
                 active:scale-[0.98] disabled:opacity-70 disabled:bg-gray-300 disabled:shadow-none"

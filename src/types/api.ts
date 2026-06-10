@@ -1,6 +1,6 @@
 export interface ApiResponse<T> {
-  success: boolean;
-  message?: string;
+  status: "success" | "failure";
+  message: string;
   data: T;
 }
 
@@ -35,3 +35,24 @@ export interface AuthResponse {
   token: string;
   user: User;
 }
+
+export interface LoginCredentials {
+  login: string;
+  password: string;
+}
+
+export interface SignupPayload {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  restaurantId?: number | number[];
+}
+
+export interface PasswordResetPayload {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
+export type MessageResponse = ApiResponse<unknown>;

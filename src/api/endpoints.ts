@@ -3,6 +3,9 @@ export const ENDPOINTS = {
     LOGIN: '/website/auth/login',
     GUEST_LOGIN: '/website/auth/guest-login',
     SIGNUP: '/website/auth/signup',
+    FORGOT_PASSWORD: '/website/auth/forgot-password',
+    VALIDATE_RESET_TOKEN: '/website/auth/reset-password/validate',
+    RESET_PASSWORD: '/website/auth/reset-password',
   },
   CUSTOMER: {
     GET_PROFILE: '/customers/profile',
