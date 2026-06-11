@@ -284,29 +284,29 @@ export default function CheckoutPage() {
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span>
               <span>
-                €{(successOrder.subtotal || originalSubtotal).toFixed(2)}
+                €{parseFloat(successOrder.subtotal || 0).toFixed(2)}
               </span>
             </div>
-            {successOrder.itemDiscount > 0 && (
+            {parseFloat(successOrder.itemDiscount) > 0 && (
               <div className="flex justify-between text-sm text-green-600 font-semibold">
                 <span>Discount (Promo)</span>
-                <span>-€{successOrder.itemDiscount.toFixed(2)}</span>
+                <span>-€{parseFloat(successOrder.itemDiscount).toFixed(2)}</span>
               </div>
             )}
-            {successOrder.discount > 0 && (
+            {parseFloat(successOrder.discount) > 0 && (
               <div className="flex justify-between text-sm text-green-600 font-semibold">
                 <span>Discount (Coupon)</span>
-                <span>-€{successOrder.discount.toFixed(2)}</span>
+                <span>-€{parseFloat(successOrder.discount).toFixed(2)}</span>
               </div>
             )}
             {orderType !== "pickup" && (
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Delivery Charge</span>
                 <span>
-                  {successOrder.deliveryCharge === 0 ? (
+                  {parseFloat(successOrder.deliveryCharge) === 0 ? (
                     <span className="text-green-600 font-bold">FREE</span>
                   ) : (
-                    `€${(successOrder.deliveryCharge || 0).toFixed(2)}`
+                    `€${parseFloat(successOrder.deliveryCharge || 0).toFixed(2)}`
                   )}
                 </span>
               </div>

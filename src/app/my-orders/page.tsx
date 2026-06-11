@@ -134,7 +134,7 @@ export default function OrdersPage() {
   // Active vs Previous Order division
   const activeOrders = orders.filter((order) => {
     const status = order.status?.toLowerCase() || "";
-    return ["placed", "preparing", "accepted", "ready", "out_for_delivery", "picked_up"].includes(status);
+    return ["placed", "confirmed", "preparing", "accepted", "ready", "out_for_delivery", "picked_up"].includes(status);
   });
 
   const previousOrders = orders.filter((order) => {
@@ -238,6 +238,8 @@ function OrderCard({ order, active }: { order: Order; active?: boolean }) {
     switch (rawStatus) {
       case "placed":
         return { label: "Order Placed", classes: "bg-teal-50 text-teal-600 border border-teal-200" };
+      case "confirmed":
+        return { label: "Confirmed", classes: "bg-green-50 text-green-600 border border-green-200" };
       case "accepted":
         return { label: "Accepted", classes: "bg-blue-50 text-blue-600 border border-blue-200" };
       case "preparing":
