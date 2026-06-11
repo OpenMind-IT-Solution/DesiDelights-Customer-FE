@@ -16,6 +16,7 @@ function ResetPasswordForm() {
   const [isValidating, setIsValidating] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
   // Validate the reset token on mount
@@ -65,32 +66,43 @@ function ResetPasswordForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!token) {
-      toast.error("Invalid or expired password reset link.");
+    const tokenValue = token ?? "";
+    const newErrors: Record<string, string> = {};
+
+    if (!tokenValue) {
+      newErrors.general = "Invalid or expired password reset link.";
+    }
+
+    if (!password) {
+      newErrors.password = "Password field is required.";
+    }
+
+    if (!confirm) {
+      newErrors.confirm = "Confirm password field is required.";
+    }
+
+    if (password) {
+      const strengthError = validatePasswordStrength(password);
+      if (strengthError) {
+        newErrors.password = strengthError;
+      }
+    }
+
+    if (password && confirm && password !== confirm) {
+      newErrors.confirm = "Passwords do not match.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
-    if (!password || !confirm) {
-      toast.error("Please fill all fields.");
-      return;
-    }
-
-    const strengthError = validatePasswordStrength(password);
-    if (strengthError) {
-      toast.error(strengthError);
-      return;
-    }
-
-    if (password !== confirm) {
-      toast.error("Passwords do not match.");
-      return;
-    }
-
+    setErrors({});
     setIsLoading(true);
 
     try {
       const response = await authService.resetPassword({
-        token,
+        token: tokenValue,
         password,
         confirmPassword: confirm,
       });
@@ -102,7 +114,7 @@ function ResetPasswordForm() {
       const errorMsg = axios.isAxiosError<{ message?: string }>(err)
         ? err.response?.data?.message || "Failed to update password."
         : "Failed to update password.";
-      toast.error(errorMsg);
+      setErrors({ general: errorMsg });
     } finally {
       setIsLoading(false);
     }
@@ -149,28 +161,45 @@ function ResetPasswordForm() {
       <p className="text-sm text-gray-500 text-center mb-6 leading-relaxed">
         Please enter your new password below.
       </p>
+      {errors.general && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 text-center">
+          {errors.general}
+        </div>
+      )}
 
       <input
         type="password"
         placeholder="New Password"
         value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        onChange={(e) => {
+          setPassword(e.target.value);
+          setErrors((prev) => ({ ...prev, password: "", general: "" }));
+        }}
         className="w-full mb-4 px-4 py-3 rounded-lg border border-gray-300 
         focus:outline-none focus:ring-2 focus:ring-[#FA664D] 
         focus:border-[#FA664D] transition"
         required
       />
+      {errors.password && (
+        <p className="text-sm text-red-500 mb-4">{errors.password}</p>
+      )}
 
       <input
         type="password"
         placeholder="Confirm Password"
         value={confirm}
-        onChange={(e) => setConfirm(e.target.value)}
+        onChange={(e) => {
+          setConfirm(e.target.value);
+          setErrors((prev) => ({ ...prev, confirm: "", general: "" }));
+        }}
         className="w-full mb-6 px-4 py-3 rounded-lg border border-gray-300 
         focus:outline-none focus:ring-2 focus:ring-[#FA664D] 
         focus:border-[#FA664D] transition"
         required
       />
+      {errors.confirm && (
+        <p className="text-sm text-red-500 mb-4">{errors.confirm}</p>
+      )}
 
       <div className="mb-6 p-4 bg-[#f8fafc] rounded-xl border border-gray-100 text-xs text-gray-500 space-y-1">
         <p className="font-semibold text-[#1f2a44] mb-1">Password Requirements:</p>

@@ -10,6 +10,7 @@ export default function Page() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [successSent, setSuccessSent] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const router = useRouter();
 
@@ -17,10 +18,11 @@ export default function Page() {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Please enter your email address.");
+      setErrors({ email: "Email field is required." });
       return;
     }
 
+    setErrors({});
     setIsLoading(true);
 
     try {
@@ -33,7 +35,7 @@ export default function Page() {
       const errorMsg = axios.isAxiosError<{ message?: string }>(error)
         ? error.response?.data?.message || "Failed to send reset link."
         : "Failed to send reset link.";
-      toast.error(errorMsg);
+      setErrors({ email: errorMsg });
     } finally {
       setIsLoading(false);
     }
@@ -74,13 +76,19 @@ export default function Page() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrors((prev) => ({ ...prev, email: "" }));
+              }}
               required
               placeholder="e.g. name@example.com"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 
               focus:outline-none focus:ring-2 focus:ring-[#FA664D] 
               focus:border-[#FA664D] transition mb-6"
             />
+            {errors.email && (
+              <p className="text-sm text-red-500 mb-4">{errors.email}</p>
+            )}
 
             <button
               type="submit"

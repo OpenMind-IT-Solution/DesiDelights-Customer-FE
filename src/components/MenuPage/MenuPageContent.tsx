@@ -54,13 +54,9 @@ const MenuPageContent = () => {
         setCategories(categoriesData);
         setMenuItems(itemsData);
         
-        // Retrieve and apply category parameter if present on initial load
+        // Default to "all" category to show all items
         const categoryParam = searchParams.get("category");
-        if (categoryParam) {
-          setActiveCategoryId(categoryParam);
-        } else {
-          setActiveCategoryId("all");
-        }
+        setActiveCategoryId(categoryParam || "all");
       } catch (error) {
         console.error("Failed to fetch menu data:", error);
       } finally {

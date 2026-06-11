@@ -18,6 +18,7 @@ export default function RegisterPage() {
     confirmPassword: "",
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -38,51 +39,62 @@ export default function RegisterPage() {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fieldName = e.target.name as keyof typeof form;
     let value = e.target.value;
-    if (e.target.name === "phone") {
+    if (fieldName === "phone") {
       value = value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
     }
-    setForm({ ...form, [e.target.name]: value });
+    setForm({ ...form, [fieldName]: value });
+    setErrors((prev) => ({ ...prev, [fieldName]: "" }));
   };
 
   const handleRegister = async (e?: React.FormEvent) => {
     e?.preventDefault();
     const { name, email, phone, password, confirmPassword } = form;
+    const newErrors: Record<string, string> = {};
 
-    // ✅ Validation
-    if (!name || !email || !phone || !password || !confirmPassword) {
-      toast.error("All fields are required");
-      return;
+    if (!name) {
+      newErrors.name = "Name field is required.";
     }
 
-    if (!emailRegex.test(email)) {
-      toast.error("Please enter a valid email address");
-      return;
+    if (!email) {
+      newErrors.email = "Email field is required.";
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
     }
 
-    if (!phoneRegex.test(phone)) {
-      toast.error("Please enter a valid phone number with country code (e.g., +32...)");
-      return;
+    if (!phone) {
+      newErrors.phone = "Phone field is required.";
+    } else if (!phoneRegex.test(phone)) {
+      newErrors.phone = "Please enter a valid phone number with country code (e.g., +32...).";
     }
 
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
-      return;
+    if (!password) {
+      newErrors.password = "Password field is required.";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long.";
     }
 
-    if (password !== confirmPassword) {
-      toast.error("Passwords do not match");
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Confirm password field is required.";
+    } else if (password && password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
+      setErrors({});
 
       await signup({
         fullName: name,
         email,
         phoneNumber: phone,
-        password
+        password,
       });
 
       toast.success("Account created successfully ✅");
@@ -100,7 +112,7 @@ export default function RegisterPage() {
       router.push("/");
     } catch (error: any) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Registration failed ❌");
+      setErrors({ general: error.response?.data?.message || "Registration failed. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -113,6 +125,12 @@ export default function RegisterPage() {
         <div className="text-center mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Create Account</h2>
         </div>
+
+        {errors.general && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errors.general}
+          </div>
+        )}
 
         <form onSubmit={handleRegister}>
           {/* Name + Phone - Responsive Grid */}
@@ -128,6 +146,9 @@ export default function RegisterPage() {
                 className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
               />
+              {errors.name && (
+                <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+              )}
             </div>
 
             <div>
@@ -142,6 +163,9 @@ export default function RegisterPage() {
                 className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
               />
+              {errors.phone && (
+                <p className="mt-2 text-sm text-red-600">{errors.phone}</p>
+              )}
             </div>
           </div>
 
@@ -157,6 +181,9 @@ export default function RegisterPage() {
               className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
               focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
             />
+            {errors.email && (
+              <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
@@ -171,6 +198,9 @@ export default function RegisterPage() {
               className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
               focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
             />
+            {errors.password && (
+              <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -187,6 +217,9 @@ export default function RegisterPage() {
               className="w-full px-2 py-2 sm:py-3 border-b border-gray-300 outline-none 
               focus:border-[#FA664D] transition bg-transparent text-sm sm:text-base"
             />
+            {errors.confirmPassword && (
+              <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+            )}
           </div>
 
           {/* Button */}

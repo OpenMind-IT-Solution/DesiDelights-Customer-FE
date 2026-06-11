@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -43,13 +44,24 @@ export default function LoginPage() {
 
   const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!email || !password) {
-      toast.error("All fields required");
+    const newErrors: Record<string, string> = {};
+
+    if (!email) {
+      newErrors.email = "Email field is required.";
+    }
+
+    if (!password) {
+      newErrors.password = "Password field is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
+      setErrors({});
       await login({ login: email, password });
 
       if (rememberMe) {
@@ -61,7 +73,7 @@ export default function LoginPage() {
       toast.success("Login successful ✅");
       router.push("/");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Login failed ❌");
+      setErrors({ general: error.response?.data?.message || "Login failed ❌" });
     } finally {
       setLoading(false);
     }
@@ -79,19 +91,27 @@ export default function LoginPage() {
     e?.preventDefault();
 
     const normalizedPhone = normalizePhone(guestPhoneNumber).trim();
+    const newErrors: Record<string, string> = {};
 
-    if (!normalizedPhone || !phoneRegex.test(normalizedPhone)) {
-      toast.error("Please enter a valid phone number with country code");
+    if (!normalizedPhone) {
+      newErrors.guestPhone = "Phone field is required.";
+    } else if (!phoneRegex.test(normalizedPhone)) {
+      newErrors.guestPhone = "Please enter a valid phone number with country code.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
+      setErrors({});
       await guestLogin(normalizedPhone);
       toast.success("Guest login successful ✅");
       router.push("/");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Guest login failed ❌");
+      setErrors({ general: error.response?.data?.message || "Guest login failed ❌" });
     } finally {
       setLoading(false);
     }
@@ -106,6 +126,11 @@ export default function LoginPage() {
 
         {!showGuestForm ? (
           <>
+            {errors.general && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errors.general}
+              </div>
+            )}
             <form onSubmit={handleLogin}>
               <div className="mb-5 sm:mb-6">
                 <label className="text-sm text-gray-500 mb-2 block">
@@ -115,10 +140,16 @@ export default function LoginPage() {
                   type="email"
                   placeholder="Enter email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrors((prev) => ({ ...prev, email: "", general: "" }));
+                  }}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
 
               <div className="mb-4 sm:mb-5">
@@ -129,10 +160,16 @@ export default function LoginPage() {
                   type="password"
                   placeholder="Enter password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: "", general: "" }));
+                  }}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-sm mb-6 sm:mb-8">
@@ -206,6 +243,12 @@ export default function LoginPage() {
               Enter your phone number to continue as a guest.
             </p>
 
+            {errors.general && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errors.general}
+              </div>
+            )}
+
             <form onSubmit={handleGuestLogin}>
               <div className="mb-8">
                 <label className="text-sm text-gray-500 mb-2 block">
@@ -217,11 +260,15 @@ export default function LoginPage() {
                   value={guestPhoneNumber}
                   onChange={(e) => {
                     setGuestPhoneNumber(normalizePhone(e.target.value));
+                    setErrors((prev) => ({ ...prev, guestPhone: "", general: "" }));
                   }}
                   maxLength={16}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                   focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.guestPhone && (
+                  <p className="mt-2 text-sm text-red-600">{errors.guestPhone}</p>
+                )}
               </div>
 
               <button

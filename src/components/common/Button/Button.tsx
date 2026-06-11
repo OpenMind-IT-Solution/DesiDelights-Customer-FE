@@ -23,14 +23,19 @@ const Button: React.FC<ButtonProps> = ({
   const baseClasses =
     "rounded-full font-semibold transition-all duration-200 flex items-center py-1.5 px-4 border gap-2 cursor-pointer";
 
+  const primaryFill = "bg-[var(--primary-color)] text-white border-[var(--primary-color)] hover:bg-transparent hover:text-[var(--primary-color)]";
+  const primaryOutline = "text-[var(--primary-color)] border-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white";
+  const secondaryFill = "bg-[var(--secondary-color)] text-white border-[var(--secondary-color)] hover:bg-transparent hover:text-[var(--secondary-color)]";
+  const secondaryOutline = "text-[var(--secondary-color)] border-[var(--secondary-color)] hover:bg-[var(--secondary-color)] hover:text-white";
+
   const variantClasses =
     variant === "primary"
       ? type === "fill"
-        ? `bg-primary text-white border-primary hover:bg-transparent hover:text-primary`
-        : `text-primary border-primary hover:bg-primary hover:text-white`
+        ? primaryFill
+        : primaryOutline
       : type === "fill"
-      ? `bg-secondary text-white border-secondary hover:bg-transparent hover:text-secondary`
-      : `text-secondary border-secondary hover:bg-secondary hover:text-white`;
+      ? secondaryFill
+      : secondaryOutline;
 
   const classes = `${baseClasses} ${variantClasses} ${className}`.trim();
 
