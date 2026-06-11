@@ -21,6 +21,7 @@ export const ENDPOINTS = {
     MENU_ITEMS_LIST: '/website/menu-items/list',
     MENU_ITEM_DETAILS: (id: string) => `/website/menu-items/${id}`,
     RESTAURANT_BANNERS: (restaurantId: number | string) => `/website/restaurants/${restaurantId}/banners`,
+    RESTAURANT_SETTINGS: (restaurantId: number | string) => `/website/restaurants/${restaurantId}/settings`,
   },
   ADDRESS: {
     GET_ALL: '/website/addresses',

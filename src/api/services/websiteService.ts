@@ -31,4 +31,8 @@ export const websiteService = {
     const response = await apiClient.get<any>(ENDPOINTS.WEBSITE.RESTAURANT_BANNERS(restaurantId));
     return response.data.data?.banners || [];
   },
+  getRestaurantSettings: async (restaurantId: number | string): Promise<{ isDeliveryEnabled: boolean }> => {
+    const response = await apiClient.get<any>(ENDPOINTS.WEBSITE.RESTAURANT_SETTINGS(restaurantId));
+    return response.data.data;
+  },
 };

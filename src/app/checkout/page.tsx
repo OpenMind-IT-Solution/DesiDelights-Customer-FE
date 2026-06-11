@@ -84,12 +84,16 @@ export default function CheckoutPage() {
   const [paymentCurrency, setPaymentCurrency] = useState("eur");
   const [paymentStep, setPaymentStep] = useState<PaymentStep | null>(null);
 
-  // Fetch addresses + payment config on load
+  // DELIVERY SETTING
+  const [isDeliveryEnabled, setIsDeliveryEnabled] = useState(true);
+
+  // Fetch addresses + payment config + delivery setting on load
   useEffect(() => {
     if (isAuthenticated) {
       fetchAddresses();
     }
     fetchPaymentConfig();
+    fetchRestaurantSettings();
   }, [isAuthenticated]);
 
   const fetchPaymentConfig = async () => {
@@ -100,6 +104,18 @@ export default function CheckoutPage() {
     } catch {
       // gateway not configured — fall back to direct order
       setPaymentGatewayEnabled(false);
+    }
+  };
+
+  const fetchRestaurantSettings = async () => {
+    try {
+      const settings = await websiteService.getRestaurantSettings(RESTAURANT_ID);
+      setIsDeliveryEnabled(settings.isDeliveryEnabled);
+      if (!settings.isDeliveryEnabled) {
+        setOrderType("pickup");
+      }
+    } catch {
+      // default to delivery enabled if fetch fails
     }
   };
 
@@ -387,17 +403,24 @@ export default function CheckoutPage() {
                 <h2 className="font-semibold text-lg mb-4">
                   How do you want your order?
                 </h2>
+                {!isDeliveryEnabled && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 mb-4 text-sm text-orange-700 font-medium">
+                    Delivery is currently unavailable. Takeout only.
+                  </div>
+                )}
                 <div className="flex gap-4">
-                  <button
-                    onClick={() => setOrderType("delivery")}
-                    className={`flex-1 py-3 px-6 rounded-xl font-semibold border text-center transition ${
-                      orderType === "delivery"
-                        ? "bg-[#FA664D]/10 border-[#FA664D] text-[#FA664D]"
-                        : "border-gray-200 text-gray-500 hover:bg-gray-50"
-                    }`}
-                  >
-                    Delivery
-                  </button>
+                  {isDeliveryEnabled && (
+                    <button
+                      onClick={() => setOrderType("delivery")}
+                      className={`flex-1 py-3 px-6 rounded-xl font-semibold border text-center transition ${
+                        orderType === "delivery"
+                          ? "bg-[#FA664D]/10 border-[#FA664D] text-[#FA664D]"
+                          : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                      }`}
+                    >
+                      Delivery
+                    </button>
+                  )}
                   <button
                     onClick={() => setOrderType("pickup")}
                     className={`flex-1 py-3 px-6 rounded-xl font-semibold border text-center transition ${
