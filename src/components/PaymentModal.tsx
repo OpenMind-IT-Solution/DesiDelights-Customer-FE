@@ -119,23 +119,31 @@ export default function PaymentModal({
   onPaymentFailed,
 }: PaymentModalProps) {
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [paid, setPaid] = useState(false);
 
   useEffect(() => {
     // Load Stripe dynamically using the publishable key fetched from the backend
     setStripePromise(loadStripe(publishableKey));
   }, [publishableKey]);
 
+  const handleSuccess = () => {
+    setPaid(true);
+    onSuccess();
+  };
+
   if (!stripePromise) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
-        >
-          <FaTimes size={18} />
-        </button>
+        {!paid && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+          >
+            <FaTimes size={18} />
+          </button>
+        )}
 
         <div className="mb-6 text-center">
           <h2 className="text-xl font-extrabold text-gray-800">Complete Payment</h2>
@@ -145,16 +153,24 @@ export default function PaymentModal({
           </p>
         </div>
 
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <CheckoutForm
-            clientSecret={clientSecret}
-            orderTotal={orderTotal}
-            currency={currency}
-            onSuccess={onSuccess}
-            onClose={onClose}
-            onPaymentFailed={onPaymentFailed}
-          />
-        </Elements>
+        {paid ? (
+          <div className="flex flex-col items-center gap-4 py-6">
+            <div className="w-10 h-10 border-4 border-[#FA664D] border-t-transparent rounded-full animate-spin" />
+            <p className="font-bold text-gray-800">Confirming your order…</p>
+            <p className="text-sm text-gray-500">Please wait, do not close this window.</p>
+          </div>
+        ) : (
+          <Elements stripe={stripePromise} options={{ clientSecret }}>
+            <CheckoutForm
+              clientSecret={clientSecret}
+              orderTotal={orderTotal}
+              currency={currency}
+              onSuccess={handleSuccess}
+              onClose={onClose}
+              onPaymentFailed={onPaymentFailed}
+            />
+          </Elements>
+        )}
       </div>
     </div>
   );
