@@ -34,5 +34,11 @@ export const ENDPOINTS = {
   ORDER: {
     PLACE: '/orders/place',
     LIST: '/orders/list',
+    GET_BY_ID: (id: number) => `/orders/${id}`,
+    CANCEL: (id: number) => `/orders/${id}/cancel`,
+  },
+  PAYMENT: {
+    CONFIG: '/website/payment/config',
+    CREATE_INTENT: '/website/payment/create-intent',
   },
 };

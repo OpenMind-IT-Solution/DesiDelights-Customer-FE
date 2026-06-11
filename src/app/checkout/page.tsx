@@ -16,10 +16,14 @@ import {
 import AddressModal from "@/components/AddressModal";
 import TimeModal from "@/components/TimeModal";
 import CouponModal from "@/components/CouponModal";
+import PaymentModal from "@/components/PaymentModal";
 import { customerService } from "@/api/services/customerService";
 import { websiteService } from "@/api/services/websiteService";
 import { orderService } from "@/api/services/orderService";
+import { paymentService } from "@/api/services/paymentService";
 import Link from "next/link";
+
+const RESTAURANT_ID = 1;
 
 interface Address {
   id?: string;
@@ -29,9 +33,17 @@ interface Address {
   address: string;
 }
 
+interface PaymentStep {
+  clientSecret: string;
+  publishableKey: string;
+  orderId: number;
+  orderTotal: number;
+  currency: string;
+}
+
 export default function CheckoutPage() {
   const { cartItems, increaseQty, decreaseQty, clearCart } = useCart();
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // Order type: delivery vs pickup
   const [orderType, setOrderType] = useState<"delivery" | "pickup">("delivery");
@@ -61,12 +73,29 @@ export default function CheckoutPage() {
   const [checkoutError, setCheckoutError] = useState("");
   const [successOrder, setSuccessOrder] = useState<any | null>(null);
 
-  // Fetch addresses on load if authenticated
+  // PAYMENT GATEWAY
+  const [paymentGatewayEnabled, setPaymentGatewayEnabled] = useState(false);
+  const [paymentCurrency, setPaymentCurrency] = useState("eur");
+  const [paymentStep, setPaymentStep] = useState<PaymentStep | null>(null);
+
+  // Fetch addresses + payment config on load
   useEffect(() => {
     if (isAuthenticated) {
       fetchAddresses();
     }
+    fetchPaymentConfig();
   }, [isAuthenticated]);
+
+  const fetchPaymentConfig = async () => {
+    try {
+      const config = await paymentService.getConfig(RESTAURANT_ID);
+      setPaymentGatewayEnabled(config.enabled);
+      if (config.currency) setPaymentCurrency(config.currency);
+    } catch {
+      // gateway not configured — fall back to direct order
+      setPaymentGatewayEnabled(false);
+    }
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -117,12 +146,9 @@ export default function CheckoutPage() {
   );
 
   const itemDiscount = originalSubtotal - subtotal;
-
-  // Calculate dynamic values
   const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 2) : 0;
   const total = subtotal - couponDiscount + deliveryCharge;
 
-  // Handle Coupon Selection / Validation
   const handleApplyCoupon = async (code: string) => {
     try {
       setCouponError("");
@@ -137,13 +163,12 @@ export default function CheckoutPage() {
     }
   };
 
-  // Place Order on Backend
+  // Step 1: Place the order — get back the orderId
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) {
       setCheckoutError("Your cart is empty.");
       return;
     }
-
     if (orderType === "delivery" && addresses.length === 0) {
       setCheckoutError("Please add a delivery address.");
       return;
@@ -163,7 +188,7 @@ export default function CheckoutPage() {
           : `${selectedDay === "tomorrow" ? "Tomorrow" : "Today"} ${selectedTime}`;
 
       const payload = {
-        restaurantId: 1, // Default main restaurant
+        restaurantId: RESTAURANT_ID,
         orderType,
         deliveryAddress: selectedAddress,
         deliveryTime: formattedTime || undefined,
@@ -174,11 +199,21 @@ export default function CheckoutPage() {
         })),
       };
 
-      const result = await orderService.placeOrder(payload);
+      const order = await orderService.placeOrder(payload);
 
-      // Order placed successfully!
-      setSuccessOrder(result);
-      clearCart();
+      if (paymentGatewayEnabled) {
+        const intent = await paymentService.createIntent(order.id);
+        setPaymentStep({
+          clientSecret: intent.clientSecret,
+          publishableKey: intent.publishableKey,
+          orderId: order.id,
+          orderTotal: parseFloat(order.totalAmount),
+          currency: paymentCurrency,
+        });
+      } else {
+        setSuccessOrder(order);
+        clearCart();
+      }
     } catch (err: any) {
       console.error("Checkout failed:", err);
       const msg =
@@ -188,6 +223,40 @@ export default function CheckoutPage() {
     } finally {
       setPlacingOrder(false);
     }
+  };
+
+  // Called after Stripe card payment succeeds on the client side
+  const handlePaymentSuccess = async () => {
+    if (!paymentStep) return;
+
+    setPlacingOrder(true);
+
+    // Poll up to 15 seconds for the webhook to mark the order as paid
+    let attempts = 0;
+    while (attempts < 15) {
+      await new Promise((r) => setTimeout(r, 1000));
+      try {
+        const order = await orderService.getOrderById(paymentStep.orderId);
+        if (order?.paymentStatus === "paid") {
+          setSuccessOrder(order);
+          clearCart();
+          setPaymentStep(null);
+          setPlacingOrder(false);
+          return;
+        }
+      } catch {
+        // ignore transient errors during polling
+      }
+      attempts++;
+    }
+
+    // Webhook did not confirm — payment may still be processing on Stripe's side
+    setPlacingOrder(false);
+    setPaymentStep(null);
+    setCheckoutError(
+      "Payment was processed by Stripe, but your order confirmation is taking longer than expected. " +
+      "Your order has been saved — please check your order history in a few moments."
+    );
   };
 
   // Success Confirmation Screen
@@ -230,14 +299,14 @@ export default function CheckoutPage() {
                 <span>-€{successOrder.discount.toFixed(2)}</span>
               </div>
             )}
-            {orderType != "pickup" && (
+            {orderType !== "pickup" && (
               <div className="flex justify-between text-sm text-gray-600">
                 <span>Delivery Charge</span>
                 <span>
-                  {successOrder.deliveryCharge == 0 ? (
+                  {successOrder.deliveryCharge === 0 ? (
                     <span className="text-green-600 font-bold">FREE</span>
                   ) : (
-                    `€${successOrder.deliveryCharge.toFixed(2)}`
+                    `€${(successOrder.deliveryCharge || 0).toFixed(2)}`
                   )}
                 </span>
               </div>
@@ -245,7 +314,7 @@ export default function CheckoutPage() {
             <div className="flex justify-between pt-2 border-t font-bold text-lg text-gray-800">
               <span>Grand Total</span>
               <span className="text-[#FA664D] font-extrabold">
-                €{successOrder.totalAmount.toFixed(2)}
+                €{parseFloat(successOrder.totalAmount).toFixed(2)}
               </span>
             </div>
           </div>
@@ -316,7 +385,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* DELIVERY ADDRESS - DISPLAYED ONLY FOR DELIVERY TYPE */}
+              {/* DELIVERY ADDRESS */}
               {orderType === "delivery" && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm">
                   <div className="flex justify-between items-center mb-4">
@@ -353,7 +422,6 @@ export default function CheckoutPage() {
                             <span className="font-bold text-[#FA664D] text-sm uppercase flex items-center gap-1.5">
                               <FaMapMarkerAlt /> {item.label}
                             </span>
-
                             <div className="flex items-center gap-3">
                               <button
                                 onClick={(e) => handleDeleteAddress(e, item.id)}
@@ -362,7 +430,6 @@ export default function CheckoutPage() {
                               >
                                 <FaTrash size={12} />
                               </button>
-
                               <div
                                 className={`w-4 h-4 rounded-full border ${
                                   selectedIndex === i
@@ -389,23 +456,18 @@ export default function CheckoutPage() {
                   Preferred Time Frame For{" "}
                   {orderType === "delivery" ? "Delivery" : "Takeout"}
                 </h2>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div
                     onClick={() => setDeliveryTime("now")}
                     className={`p-5 rounded-xl border cursor-pointer ${
-                      deliveryTime === "now"
-                        ? "border-[#FA664D] bg-[#FA664D]/5"
-                        : "border-gray-200"
+                      deliveryTime === "now" ? "border-[#FA664D] bg-[#FA664D]/5" : "border-gray-200"
                     }`}
                   >
                     <div className="flex justify-between">
                       <p className="font-semibold">Now</p>
                       <div
                         className={`w-4 h-4 rounded-full border-2 ${
-                          deliveryTime === "now"
-                            ? "bg-[#FA664D] border-[#FA664D]"
-                            : "border-gray-300"
+                          deliveryTime === "now" ? "bg-[#FA664D] border-[#FA664D]" : "border-gray-300"
                         }`}
                       />
                     </div>
@@ -420,18 +482,14 @@ export default function CheckoutPage() {
                       setShowTimeModal(true);
                     }}
                     className={`p-5 rounded-xl border cursor-pointer ${
-                      deliveryTime === "schedule"
-                        ? "border-[#FA664D] bg-[#FA664D]/5"
-                        : "border-gray-200"
+                      deliveryTime === "schedule" ? "border-[#FA664D] bg-[#FA664D]/5" : "border-gray-200"
                     }`}
                   >
                     <div className="flex justify-between">
                       <p className="font-semibold">Schedule for later</p>
                       <div
                         className={`w-4 h-4 rounded-full border-2 ${
-                          deliveryTime === "schedule"
-                            ? "bg-[#FA664D] border-[#FA664D]"
-                            : "border-gray-300"
+                          deliveryTime === "schedule" ? "bg-[#FA664D] border-[#FA664D]" : "border-gray-300"
                         }`}
                       />
                     </div>
@@ -443,6 +501,17 @@ export default function CheckoutPage() {
                   </div>
                 </div>
               </div>
+
+              {/* PAYMENT METHOD INFO */}
+              {paymentGatewayEnabled && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h2 className="font-semibold text-lg mb-2">Payment</h2>
+                  <div className="flex items-center gap-3 text-sm text-gray-600">
+                    <span className="bg-[#635BFF] text-white text-xs font-bold px-2 py-0.5 rounded">stripe</span>
+                    <span>Credit / Debit Card — secured checkout</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* CART & CALCULATION SUMMARY */}
@@ -498,9 +567,7 @@ export default function CheckoutPage() {
                                   </span>
                                 </>
                               ) : (
-                                <span className="text-[10px] text-gray-400">
-                                  €{item.price.toFixed(2)} each
-                                </span>
+                                <span className="text-[10px] text-gray-400">€{item.price.toFixed(2)} each</span>
                               )}
                             </div>
                           </div>
@@ -513,9 +580,7 @@ export default function CheckoutPage() {
                           >
                             <FaMinus size={8} />
                           </button>
-                          <span className="font-bold text-xs text-gray-700 w-4 text-center">
-                            {item.qty}
-                          </span>
+                          <span className="font-bold text-xs text-gray-700 w-4 text-center">{item.qty}</span>
                           <button
                             onClick={() => increaseQty(item.id)}
                             className="w-6 h-6 flex items-center justify-center rounded-full bg-[var(--primary-color)] text-white hover:opacity-95 transition"
@@ -583,7 +648,7 @@ export default function CheckoutPage() {
                     </p>
                   )}
 
-                  {/* Backend Secured Billing calculations */}
+                  {/* Billing calculations */}
                   <div className="space-y-3 text-sm text-gray-600 mb-6">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
@@ -591,37 +656,34 @@ export default function CheckoutPage() {
                         €{originalSubtotal.toFixed(2)}
                       </span>
                     </div>
-
                     {itemDiscount > 0 && (
                       <div className="flex justify-between text-green-600 font-semibold">
                         <span>Discount (Promo)</span>
                         <span>-€{itemDiscount.toFixed(2)}</span>
                       </div>
                     )}
-
                     {couponDiscount > 0 && (
                       <div className="flex justify-between text-green-600 font-semibold">
                         <span>Discount ({appliedCouponCode})</span>
                         <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
-
-                    {orderType != "pickup" && (
-                      <div className="flex justify-between">
-                        <span>Delivery Charge</span>
-                        {deliveryCharge == 0 ? (
-                          <span className="text-green-600 font-bold">
-                            FREE DELIVERY
-                          </span>
-                        ) : (
-                          <span className="font-semibold text-gray-800">
-                            €{deliveryCharge.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+                    <div className="flex justify-between">
+                      <span>Delivery Charge</span>
+                      {orderType === "pickup" ? (
+                        <span className="text-green-600 font-bold">FREE TAKEOUT</span>
+                      ) : deliveryCharge === 0 ? (
+                        <span className="text-green-600 font-bold">FREE DELIVERY</span>
+                      ) : (
+                        <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
+                      )}
+                    </div>
+                    {orderType === "delivery" && subtotal <= 30 && (
+                      <p className="text-[10px] text-gray-400 text-right italic font-medium">
+                        Add €{(30 - subtotal).toFixed(2)} more for free delivery!
+                      </p>
                     )}
                     <hr className="border-gray-100" />
-
                     <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
                       <span>Total Amount</span>
                       <span className="text-[#FA664D] font-extrabold">
@@ -641,7 +703,11 @@ export default function CheckoutPage() {
                     disabled={placingOrder || cartItems.length === 0}
                     className="w-full bg-[#FA664D] text-white py-4 rounded-full font-bold shadow-md hover:opacity-90 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
                   >
-                    {placingOrder ? "Placing Order..." : "Place Order"}
+                    {placingOrder
+                      ? "Placing Order..."
+                      : paymentGatewayEnabled
+                      ? "Place Order & Pay"
+                      : "Place Order"}
                   </button>
                 </>
               )}
@@ -649,6 +715,47 @@ export default function CheckoutPage() {
           </div>
         )}
       </div>
+
+      {/* Confirming payment overlay — shown while polling webhook */}
+      {placingOrder && !paymentStep && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 text-center shadow-2xl">
+            <div className="w-10 h-10 border-4 border-[#FA664D] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-bold text-gray-800">Confirming your order…</p>
+            <p className="text-sm text-gray-500 mt-1">Please wait while we verify your payment.</p>
+          </div>
+        </div>
+      )}
+
+      {/* STRIPE PAYMENT MODAL */}
+      {paymentStep && (
+        <PaymentModal
+          clientSecret={paymentStep.clientSecret}
+          publishableKey={paymentStep.publishableKey}
+          orderTotal={paymentStep.orderTotal}
+          currency={paymentStep.currency}
+          onSuccess={handlePaymentSuccess}
+          onPaymentFailed={async (message) => {
+            // Card was declined — cancel the order immediately
+            try {
+              await orderService.cancelOrder(paymentStep.orderId);
+            } catch {
+              // best-effort
+            }
+            setPaymentStep(null);
+            setCheckoutError(message || "Payment failed. Please try again.");
+          }}
+          onClose={async () => {
+            // User dismissed modal — cancel the pending order
+            try {
+              await orderService.cancelOrder(paymentStep.orderId);
+            } catch {
+              // best-effort
+            }
+            setPaymentStep(null);
+          }}
+        />
+      )}
 
       <AddressModal
         show={showAddressModal}

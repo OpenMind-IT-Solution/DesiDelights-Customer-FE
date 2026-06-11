@@ -17,4 +17,11 @@ export const orderService = {
     const response = await apiClient.post<any>(ENDPOINTS.ORDER.LIST, params || {});
     return response.data.data;
   },
+  getOrderById: async (orderId: number) => {
+    const response = await apiClient.get<any>(ENDPOINTS.ORDER.GET_BY_ID(orderId));
+    return response.data.data;
+  },
+  cancelOrder: async (orderId: number) => {
+    await apiClient.patch(ENDPOINTS.ORDER.CANCEL(orderId));
+  },
 };
