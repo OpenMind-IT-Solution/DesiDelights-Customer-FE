@@ -55,31 +55,6 @@ const CartDrawer = ({show, onClose}: Props) => {
             <FaTimes size={18} />
           </button>
         </div>
-        <div className="p-5">
-          <div className="flex bg-gray-100 p-1 rounded-full w-fit">
-            <button
-              onClick={() => setOrderType("delivery")}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
-                orderType === "delivery"
-                  ? "bg-[var(--primary-color)] text-white shadow"
-                  : "text-gray-600"
-              }`}
-            >
-              Delivery
-            </button>
-
-            <button
-              onClick={() => setOrderType("takeaway")}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition ${
-                orderType === "takeaway"
-                  ? "bg-[var(--primary-color)] text-white shadow"
-                  : "text-gray-600"
-              }`}
-            >
-              Takeaway
-            </button>
-          </div>
-        </div>
         <div className="flex-1 overflow-y-auto px-5">
           {cartItems.map((item) => (
             <div

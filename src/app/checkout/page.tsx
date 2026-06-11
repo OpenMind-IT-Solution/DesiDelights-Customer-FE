@@ -4,7 +4,15 @@ import { useCart } from "@/app/context/CartContext";
 import { useAuth } from "@/app/context/AuthContext";
 import { getCleanImageUrl } from "@/utils/image";
 import { useState, useEffect } from "react";
-import { FaPlus, FaMinus, FaTrash, FaCheckCircle, FaMapMarkerAlt, FaTag, FaGift } from "react-icons/fa";
+import {
+  FaPlus,
+  FaMinus,
+  FaTrash,
+  FaCheckCircle,
+  FaMapMarkerAlt,
+  FaTag,
+  FaGift,
+} from "react-icons/fa";
 import AddressModal from "@/components/AddressModal";
 import TimeModal from "@/components/TimeModal";
 import CouponModal from "@/components/CouponModal";
@@ -54,7 +62,9 @@ export default function CheckoutPage() {
 
   // COUPON
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(null);
+  const [appliedCouponCode, setAppliedCouponCode] = useState<string | null>(
+    null,
+  );
   const [couponDiscount, setCouponDiscount] = useState<number>(0);
   const [couponError, setCouponError] = useState<string>("");
 
@@ -108,7 +118,10 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleDeleteAddress = async (e: React.MouseEvent, id: string | undefined) => {
+  const handleDeleteAddress = async (
+    e: React.MouseEvent,
+    id: string | undefined,
+  ) => {
     e.stopPropagation();
     if (!id) return;
     try {
@@ -124,16 +137,16 @@ export default function CheckoutPage() {
 
   const originalSubtotal = cartItems.reduce(
     (acc, item) => acc + (item.originalPrice || item.price) * item.qty,
-    0
+    0,
   );
 
   const subtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.qty,
-    0
+    0,
   );
 
   const itemDiscount = originalSubtotal - subtotal;
-  const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 5) : 0;
+  const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 2) : 0;
   const total = subtotal - couponDiscount + deliveryCharge;
 
   const handleApplyCoupon = async (code: string) => {
@@ -165,9 +178,14 @@ export default function CheckoutPage() {
       setPlacingOrder(true);
       setCheckoutError("");
 
-      const selectedAddress = orderType === "delivery" ? addresses[selectedIndex]?.address : "Takeout";
+      const selectedAddress =
+        orderType === "delivery"
+          ? addresses[selectedIndex]?.address
+          : "Takeaway";
       const formattedTime =
-        deliveryTime === "now" ? null : `${selectedDay === "tomorrow" ? "Tomorrow" : "Today"} ${selectedTime}`;
+        deliveryTime === "now"
+          ? null
+          : `${selectedDay === "tomorrow" ? "Tomorrow" : "Today"} ${selectedTime}`;
 
       const payload = {
         restaurantId: RESTAURANT_ID,
@@ -184,7 +202,6 @@ export default function CheckoutPage() {
       const order = await orderService.placeOrder(payload);
 
       if (paymentGatewayEnabled) {
-        // Step 2a: Gateway enabled — create a PaymentIntent and show card form
         const intent = await paymentService.createIntent(order.id);
         setPaymentStep({
           clientSecret: intent.clientSecret,
@@ -194,13 +211,14 @@ export default function CheckoutPage() {
           currency: paymentCurrency,
         });
       } else {
-        // Step 2b: No gateway — treat as COD / direct success
         setSuccessOrder(order);
         clearCart();
       }
     } catch (err: any) {
       console.error("Checkout failed:", err);
-      const msg = err.response?.data?.message || "Failed to place order. Please try again.";
+      const msg =
+        err.response?.data?.message ||
+        "Failed to place order. Please try again.";
       setCheckoutError(msg);
     } finally {
       setPlacingOrder(false);
@@ -249,7 +267,9 @@ export default function CheckoutPage() {
           <div className="flex justify-center mb-6">
             <FaCheckCircle className="text-green-500" size={72} />
           </div>
-          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Order Confirmed!</h1>
+          <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
+            Order Confirmed!
+          </h1>
           <p className="text-gray-500 mb-6">
             Thank you for your order! Your delicious meal is on its way.
           </p>
@@ -257,11 +277,15 @@ export default function CheckoutPage() {
           <div className="bg-gray-50 rounded-2xl p-5 mb-8 text-left space-y-3">
             <div className="flex justify-between border-b pb-2 text-sm text-gray-600">
               <span>Order ID</span>
-              <span className="font-bold text-gray-800">#{successOrder.id}</span>
+              <span className="font-bold text-gray-800">
+                #{successOrder.id}
+              </span>
             </div>
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span>
-              <span>€{(successOrder.subtotal || originalSubtotal).toFixed(2)}</span>
+              <span>
+                €{(successOrder.subtotal || originalSubtotal).toFixed(2)}
+              </span>
             </div>
             {successOrder.itemDiscount > 0 && (
               <div className="flex justify-between text-sm text-green-600 font-semibold">
@@ -275,16 +299,18 @@ export default function CheckoutPage() {
                 <span>-€{successOrder.discount.toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Delivery Charge</span>
-              <span>
-                {successOrder.deliveryCharge === 0 ? (
-                  <span className="text-green-600 font-bold">FREE</span>
-                ) : (
-                  `€${(successOrder.deliveryCharge || 0).toFixed(2)}`
-                )}
-              </span>
-            </div>
+            {orderType !== "pickup" && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Delivery Charge</span>
+                <span>
+                  {successOrder.deliveryCharge === 0 ? (
+                    <span className="text-green-600 font-bold">FREE</span>
+                  ) : (
+                    `€${(successOrder.deliveryCharge || 0).toFixed(2)}`
+                  )}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between pt-2 border-t font-bold text-lg text-gray-800">
               <span>Grand Total</span>
               <span className="text-[#FA664D] font-extrabold">
@@ -312,7 +338,9 @@ export default function CheckoutPage() {
         {/* Not Logged In Warning */}
         {!isAuthenticated && (
           <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 mb-8 text-center max-w-xl mx-auto">
-            <h2 className="text-lg font-bold text-orange-800 mb-2">Login Required</h2>
+            <h2 className="text-lg font-bold text-orange-800 mb-2">
+              Login Required
+            </h2>
             <p className="text-orange-700 text-sm mb-4">
               To place your order, please log in or log in as a Guest.
             </p>
@@ -330,7 +358,9 @@ export default function CheckoutPage() {
             <div className="lg:col-span-2 space-y-6">
               {/* ORDER TYPE SELECTOR */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
-                <h2 className="font-semibold text-lg mb-4">How do you want your order?</h2>
+                <h2 className="font-semibold text-lg mb-4">
+                  How do you want your order?
+                </h2>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setOrderType("delivery")}
@@ -369,9 +399,13 @@ export default function CheckoutPage() {
                   </div>
 
                   {loadingAddresses ? (
-                    <p className="text-gray-400 text-sm py-2">Loading addresses...</p>
+                    <p className="text-gray-400 text-sm py-2">
+                      Loading addresses...
+                    </p>
                   ) : addresses.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4">No address added yet. Please add a location for delivery.</p>
+                    <p className="text-gray-500 text-sm py-4">
+                      No address added yet. Please add a location for delivery.
+                    </p>
                   ) : (
                     <div className="grid md:grid-cols-2 gap-4">
                       {addresses.map((item, i) => (
@@ -405,7 +439,10 @@ export default function CheckoutPage() {
                               />
                             </div>
                           </div>
-                          <p className="text-xs text-gray-600 line-clamp-2 mt-1">{item.address}</p>
+
+                          <p className="text-xs text-gray-600 line-clamp-2 mt-1">
+                            {item.address}
+                          </p>
                         </div>
                       ))}
                     </div>
@@ -416,7 +453,8 @@ export default function CheckoutPage() {
               {/* TIMEFRAME SELECTOR */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-semibold text-lg mb-4">
-                  Preferred Time Frame For {orderType === "delivery" ? "Delivery" : "Takeout"}
+                  Preferred Time Frame For{" "}
+                  {orderType === "delivery" ? "Delivery" : "Takeout"}
                 </h2>
                 <div className="grid grid-cols-2 gap-4">
                   <div
@@ -433,7 +471,9 @@ export default function CheckoutPage() {
                         }`}
                       />
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">Ready in 30 minutes</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Ready in 30 minutes
+                    </p>
                   </div>
 
                   <div
@@ -480,7 +520,9 @@ export default function CheckoutPage() {
 
               {cartItems.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-gray-400 text-sm mb-4">Your cart is empty.</p>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Your cart is empty.
+                  </p>
                   <Link href="/" className="text-[#FA664D] font-bold text-sm">
                     Browse delicious menu items
                   </Link>
@@ -489,7 +531,10 @@ export default function CheckoutPage() {
                 <>
                   <div className="max-h-[220px] overflow-y-auto pr-1 space-y-4 mb-6">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="flex justify-between items-center pb-2 border-b border-gray-50">
+                      <div
+                        key={item.id}
+                        className="flex justify-between items-center pb-2 border-b border-gray-50"
+                      >
                         <div className="flex gap-3 items-center">
                           <div className="relative w-12 h-12 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
                             <img
@@ -499,9 +544,12 @@ export default function CheckoutPage() {
                             />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-gray-800 line-clamp-1">{item.name}</p>
+                            <p className="text-xs font-bold text-gray-800 line-clamp-1">
+                              {item.name}
+                            </p>
                             <div className="flex gap-1.5 items-center flex-wrap">
-                              {item.originalPrice && item.originalPrice > item.price ? (
+                              {item.originalPrice &&
+                              item.originalPrice > item.price ? (
                                 <>
                                   <span className="text-[9px] text-gray-400 line-through">
                                     €{item.originalPrice.toFixed(2)}
@@ -510,7 +558,12 @@ export default function CheckoutPage() {
                                     €{item.price.toFixed(2)} each
                                   </span>
                                   <span className="text-[8px] font-black text-green-700 bg-green-100/50 px-1.5 py-0.5 rounded-md tracking-wider">
-                                    {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
+                                    {Math.round(
+                                      ((item.originalPrice - item.price) /
+                                        item.originalPrice) *
+                                        100,
+                                    )}
+                                    % OFF
                                   </span>
                                 </>
                               ) : (
@@ -551,16 +604,28 @@ export default function CheckoutPage() {
                     <div className="flex items-center gap-3">
                       <span className="text-2xl flex items-center justify-center">
                         {appliedCouponCode ? (
-                          <FaGift className="text-green-600 animate-bounce" size={20} />
+                          <FaGift
+                            className="text-green-600 animate-bounce"
+                            size={20}
+                          />
                         ) : (
-                          <FaTag className="text-gray-400 rotate-90" size={20} />
+                          <FaTag
+                            className="text-gray-400 rotate-90"
+                            size={20}
+                          />
                         )}
                       </span>
                       <div>
-                        <p className={`text-xs font-extrabold ${appliedCouponCode ? "text-green-800" : "text-gray-700"}`}>
-                          {appliedCouponCode ? `Coupon Applied: ${appliedCouponCode}` : "Select Offer / Apply Coupon"}
+                        <p
+                          className={`text-xs font-extrabold ${appliedCouponCode ? "text-green-800" : "text-gray-700"}`}
+                        >
+                          {appliedCouponCode
+                            ? `Coupon Applied: ${appliedCouponCode}`
+                            : "Select Offer / Apply Coupon"}
                         </p>
-                        <p className={`text-[10px] ${appliedCouponCode ? "text-green-600 font-semibold" : "text-gray-400"}`}>
+                        <p
+                          className={`text-[10px] ${appliedCouponCode ? "text-green-600 font-semibold" : "text-gray-400"}`}
+                        >
                           {appliedCouponCode
                             ? `You saved €${couponDiscount.toFixed(2)} on your order!`
                             : "Unlock discounts with your order"}
@@ -578,14 +643,18 @@ export default function CheckoutPage() {
                   </div>
 
                   {couponError && (
-                    <p className="text-red-500 text-xs mb-4 ml-1 font-semibold">{couponError}</p>
+                    <p className="text-red-500 text-xs mb-4 ml-1 font-semibold">
+                      {couponError}
+                    </p>
                   )}
 
                   {/* Billing calculations */}
                   <div className="space-y-3 text-sm text-gray-600 mb-6">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span className="font-semibold text-gray-800">€{originalSubtotal.toFixed(2)}</span>
+                      <span className="font-semibold text-gray-800">
+                        €{originalSubtotal.toFixed(2)}
+                      </span>
                     </div>
                     {itemDiscount > 0 && (
                       <div className="flex justify-between text-green-600 font-semibold">
@@ -617,7 +686,9 @@ export default function CheckoutPage() {
                     <hr className="border-gray-100" />
                     <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
                       <span>Total Amount</span>
-                      <span className="text-[#FA664D] font-extrabold">€{total.toFixed(2)}</span>
+                      <span className="text-[#FA664D] font-extrabold">
+                        €{total.toFixed(2)}
+                      </span>
                     </div>
                   </div>
 

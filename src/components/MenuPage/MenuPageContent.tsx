@@ -54,13 +54,9 @@ const MenuPageContent = () => {
         setCategories(categoriesData);
         setMenuItems(itemsData);
         
-        // Retrieve and apply category parameter if present on initial load
+        // Default to "all" category to show all items
         const categoryParam = searchParams.get("category");
-        if (categoryParam) {
-          setActiveCategoryId(categoryParam);
-        } else {
-          setActiveCategoryId("all");
-        }
+        setActiveCategoryId(categoryParam || "all");
       } catch (error) {
         console.error("Failed to fetch menu data:", error);
       } finally {
@@ -142,7 +138,7 @@ const MenuPageContent = () => {
   return (
     <div className="bg-gray-50/50 min-h-screen pb-20">
       {/* Premium Hero Header */}
-      <div className="relative bg-gradient-to-r from-orange-600 to-amber-500 py-16 md:py-24 text-center text-white overflow-hidden shadow-lg shadow-orange-500/10">
+      <div className="relative bg-gradient-to-r from-[rgba(247,102,72,0.9)] to-[rgba(247,102,72,0.5)] py-16 md:py-24 text-center text-white overflow-hidden shadow-lg shadow-[rgba(250,102,77,0.3)]">
         <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-0 w-96 h-96 bg-black/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
 

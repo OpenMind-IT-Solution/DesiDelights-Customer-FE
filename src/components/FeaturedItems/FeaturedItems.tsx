@@ -54,7 +54,7 @@ const FeaturedItems = () => {
   }
 
   return (
-    <section className="py-10 md:py-14">
+    <section className="pt-0 pb-10 md:pb-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
         <h2 className="text-3xl font-black mb-8">{t("featuredItems")}</h2>
 

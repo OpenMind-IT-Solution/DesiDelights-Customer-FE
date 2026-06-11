@@ -1,17 +1,17 @@
 "use client";
 
-import {useLanguage} from "@/app/context/LanguageContext";
+import { useLanguage } from "@/app/context/LanguageContext";
 import Link from "next/link";
-import {usePathname} from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const Menu = () => {
   const pathname = usePathname();
-  const {t} = useLanguage();
+  const { t } = useLanguage();
 
   const menuItems = [
-    {link: "/", name: t("home")},
-    {link: "/menu", name: t("menu")},
-    {link: "/offers", name: t("offers")},
+    { link: "/", name: t("home") },
+    { link: "/menu", name: t("menu") },
+    // {link: "/offers", name: t("offers")},
   ];
 
   return (

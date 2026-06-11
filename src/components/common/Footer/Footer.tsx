@@ -1,15 +1,15 @@
 "use client";
 
-import {useLanguage} from "@/app/context/LanguageContext";
+import { useLanguage } from "@/app/context/LanguageContext";
 import Image from "next/image";
 import Link from "next/link";
-import {BsInstagram, BsWhatsapp} from "react-icons/bs";
-import {FaFacebook} from "react-icons/fa6";
-import {LiaHeadphonesSolid} from "react-icons/lia";
-import {TfiEmail} from "react-icons/tfi";
+import { BsInstagram, BsWhatsapp } from "react-icons/bs";
+import { FaFacebook } from "react-icons/fa6";
+import { LiaHeadphonesSolid } from "react-icons/lia";
+import { TfiEmail } from "react-icons/tfi";
 
 const Footer = () => {
-  const {t} = useLanguage();
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-gray-100 border-t border-gray-200 pt-16 pb-8">
@@ -26,21 +26,27 @@ const Footer = () => {
 
             <div className="flex gap-3 mt-6">
               <Link
-                href=""
+                href="https://www.facebook.com/desidelights.be"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
               >
                 <FaFacebook />
               </Link>
 
               <Link
-                href=""
+                href="https://www.instagram.com/desidelights.be/"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
               >
                 <BsInstagram />
               </Link>
 
               <Link
-                href=""
+                href="https://wa.me/32456863496"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 flex items-center justify-center border border-(--primary-color) rounded-full text-(--primary-color) hover:bg-(--primary-color) hover:text-white transition"
               >
                 <BsWhatsapp />

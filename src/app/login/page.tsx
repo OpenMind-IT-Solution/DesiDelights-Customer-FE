@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -31,25 +32,36 @@ export default function LoginPage() {
     }
   }, []);
 
-  if (isLoading || isAuthenticated) {
-    return (
-      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#f5f5f5]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
-      </div>
-    );
-  }
+  const normalizePhone = (value: string) => {
+    let cleaned = value.replace(/[^+\d]/g, "").replace(/(?!^)\+/g, "");
+    if (cleaned.startsWith("00")) {
+      cleaned = "+" + cleaned.slice(2);
+    }
+    return cleaned;
+  };
 
-  const phoneRegex = /^\+?[1-9]\d{11,14}$/;
+  const phoneRegex = /^(?:\+|00)?[1-9]\d{7,14}$/;
 
   const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!email || !password) {
-      toast.error("All fields required");
+    const newErrors: Record<string, string> = {};
+
+    if (!email) {
+      newErrors.email = "Email field is required.";
+    }
+
+    if (!password) {
+      newErrors.password = "Password field is required.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
+      setErrors({});
       await login({ login: email, password });
 
       if (rememberMe) {
@@ -61,26 +73,45 @@ export default function LoginPage() {
       toast.success("Login successful ✅");
       router.push("/");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Login failed ❌");
+      setErrors({ general: error.response?.data?.message || "Login failed ❌" });
     } finally {
       setLoading(false);
     }
   };
 
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center bg-[#f5f5f5]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#FA664D]"></div>
+      </div>
+    );
+  }
+
   const handleGuestLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!guestPhoneNumber || !phoneRegex.test(guestPhoneNumber)) {
-      toast.error("Please enter a valid phone number with country code");
+
+    const normalizedPhone = normalizePhone(guestPhoneNumber).trim();
+    const newErrors: Record<string, string> = {};
+
+    if (!normalizedPhone) {
+      newErrors.guestPhone = "Phone field is required.";
+    } else if (!phoneRegex.test(normalizedPhone)) {
+      newErrors.guestPhone = "Please enter a valid phone number with country code.";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
     try {
       setLoading(true);
-      await guestLogin(guestPhoneNumber);
+      setErrors({});
+      await guestLogin(normalizedPhone);
       toast.success("Guest login successful ✅");
       router.push("/");
     } catch (error: any) {
-      toast.error(error.response?.data?.message || "Guest login failed ❌");
+      setErrors({ general: error.response?.data?.message || "Guest login failed ❌" });
     } finally {
       setLoading(false);
     }
@@ -95,41 +126,62 @@ export default function LoginPage() {
 
         {!showGuestForm ? (
           <>
+            {errors.general && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errors.general}
+              </div>
+            )}
             <form onSubmit={handleLogin}>
               <div className="mb-5 sm:mb-6">
-                <label className="text-sm text-gray-500 mb-2 block">Email</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Email
+                </label>
                 <input
                   type="email"
                   placeholder="Enter email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrors((prev) => ({ ...prev, email: "", general: "" }));
+                  }}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+                )}
               </div>
 
               <div className="mb-4 sm:mb-5">
-                <label className="text-sm text-gray-500 mb-2 block">Password</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Password
+                </label>
                 <input
                   type="password"
                   placeholder="Enter password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setErrors((prev) => ({ ...prev, password: "", general: "" }));
+                  }}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                 focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.password && (
+                  <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 text-sm mb-6 sm:mb-8">
-              <label className="flex items-center gap-2 text-gray-500 cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-[#FA664D]" 
-                />
-                Remember Me
-              </label>
+                <label className="flex items-center gap-2 text-gray-500 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="accent-[#FA664D]"
+                  />
+                  Remember Me
+                </label>
 
                 <Link
                   href="/forgot-password"
@@ -191,26 +243,39 @@ export default function LoginPage() {
               Enter your phone number to continue as a guest.
             </p>
 
+            {errors.general && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {errors.general}
+              </div>
+            )}
+
             <form onSubmit={handleGuestLogin}>
               <div className="mb-8">
-                <label className="text-sm text-gray-500 mb-2 block">Phone Number</label>
+                <label className="text-sm text-gray-500 mb-2 block">
+                  Phone Number
+                </label>
                 <input
                   type="tel"
                   placeholder="e.g., +327123456789"
                   value={guestPhoneNumber}
                   onChange={(e) => {
-                    const cleaned = e.target.value.replace(/[^\d+]/g, "").replace(/(?!^)\+/g, "");
-                    setGuestPhoneNumber(cleaned);
+                    setGuestPhoneNumber(normalizePhone(e.target.value));
+                    setErrors((prev) => ({ ...prev, guestPhone: "", general: "" }));
                   }}
                   maxLength={16}
                   className="w-full px-2 py-3 text-sm sm:text-base border-b border-gray-300 outline-none 
                   focus:border-[#FA664D] transition bg-transparent"
                 />
+                {errors.guestPhone && (
+                  <p className="mt-2 text-sm text-red-600">{errors.guestPhone}</p>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !phoneRegex.test(guestPhoneNumber)}
+                disabled={
+                  loading || !phoneRegex.test(normalizePhone(guestPhoneNumber))
+                }
                 className="w-full py-3 rounded-full bg-[#FA664D] text-white font-semibold 
                 hover:bg-[#e85a43] transition-all duration-200 shadow-md hover:shadow-lg 
                 active:scale-[0.98] disabled:opacity-70 disabled:bg-gray-300 disabled:shadow-none"

@@ -2,12 +2,24 @@
 
 import {IoClose} from "react-icons/io5";
 
-const generateTimes = () => {
+const generateTimes = (selectedDay: "today" | "tomorrow" = "today") => {
   const times: string[] = [];
-  let hour = 0;
+  
+  // Get current time for filtering
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+
+  // Closing time is 8 PM (20:00)
+  const CLOSING_HOUR = 20;
+  
+  // Starting time: 4 PM (16:00) for today, 11 AM (11:00) for tomorrow
+  const startHour = selectedDay === "today" ? 16 : 11;
+  
+  let hour = startHour;
   let minute = 0;
 
-  while (hour < 24) {
+  while (hour < CLOSING_HOUR) {
     const start = formatTime(hour, minute);
 
     minute += 30;
@@ -16,18 +28,34 @@ const generateTimes = () => {
       minute = 0;
     }
 
+    // Stop if we've reached closing time
+    if (hour > CLOSING_HOUR) {
+      break;
+    }
+
     const end = formatTime(hour, minute);
-    times.push(`${start} - ${end}`);
+    const timeSlot = `${start} - ${end}`;
+
+    // If today, only add times that are in the future
+    if (selectedDay === "today") {
+      if (hour > currentHour || (hour === currentHour && minute > currentMinute)) {
+        times.push(timeSlot);
+      }
+    } else {
+      // If tomorrow, add all times up to closing (including 19:30 - 20:00)
+      if (hour <= CLOSING_HOUR) {
+        times.push(timeSlot);
+      }
+    }
   }
 
   return times;
 };
 
 const formatTime = (h: number, m: number) => {
-  const ampm = h >= 12 ? "PM" : "AM";
-  const hour = h % 12 === 0 ? 12 : h % 12;
+  const hour = h.toString().padStart(2, "0");
   const min = m.toString().padStart(2, "0");
-  return `${hour}:${min} ${ampm}`;
+  return `${hour}:${min}`;
 };
 
 const TimeModal = ({
@@ -41,7 +69,7 @@ const TimeModal = ({
 }: any) => {
   if (!show) return null;
 
-  const times = generateTimes();
+  const times = generateTimes(selectedDay);
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
@@ -55,7 +83,10 @@ const TimeModal = ({
 
         <div className="flex gap-3 mb-6">
           <button
-            onClick={() => setSelectedDay("today")}
+            onClick={() => {
+              setSelectedDay("today");
+              setSelectedTime(null); // Reset time when switching days
+            }}
             className={`px-5 py-2 rounded-full ${
               selectedDay === "today"
                 ? "bg-[#FA664D] text-white"
@@ -66,7 +97,10 @@ const TimeModal = ({
           </button>
 
           <button
-            onClick={() => setSelectedDay("tomorrow")}
+            onClick={() => {
+              setSelectedDay("tomorrow");
+              setSelectedTime(null); // Reset time when switching days
+            }}
             className={`px-5 py-2 rounded-full ${
               selectedDay === "tomorrow"
                 ? "bg-[#FA664D] text-white"
