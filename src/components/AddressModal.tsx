@@ -1,6 +1,6 @@
 "use client";
 
-import {GoogleMap, useLoadScript} from "@react-google-maps/api";
+import {GoogleMap, useLoadScript, type Libraries} from "@react-google-maps/api";
 import {useState, useEffect, useRef} from "react";
 import {FaTimes, FaSearch, FaHome, FaBriefcase} from "react-icons/fa";
 import {MdMoreHoriz} from "react-icons/md";
@@ -13,7 +13,7 @@ type Props = {
     lng: number;
     label: string;
     address: string;
-  }) => void;
+  }) => void | Promise<void>;
 };
 
 const defaultCenter = {
@@ -21,7 +21,61 @@ const defaultCenter = {
   lng: 4.37,
 };
 
-const libraries: any = ["places"];
+type PlaceDetails = {
+  displayName?: string;
+  formattedAddress?: string;
+  location?: google.maps.LatLng | google.maps.LatLngLiteral;
+  fetchFields: (options: {fields: string[]}) => Promise<void>;
+};
+
+type PlacePrediction = {
+  text: {
+    toString: () => string;
+  };
+  toPlace: () => PlaceDetails;
+};
+
+type PlaceSuggestion = {
+  placePrediction?: PlacePrediction;
+};
+
+type PlacesAutocompleteLibrary = {
+  AutocompleteSessionToken: new () => unknown;
+  AutocompleteSuggestion: {
+    fetchAutocompleteSuggestions: (request: {
+      input: string;
+      sessionToken: unknown;
+    }) => Promise<{suggestions: PlaceSuggestion[]}>;
+  };
+};
+
+const libraries: Libraries = ["places"];
+const AUTOCOMPLETE_DEBOUNCE_MS = 500;
+const MIN_AUTOCOMPLETE_CHARS = 3;
+
+const buildSelectedAddress = (displayName?: string, formattedAddress?: string) => {
+  const name = displayName?.trim();
+  const address = formattedAddress?.trim();
+
+  if (!name) return address || "";
+  if (!address) return name;
+  if (address.toLowerCase().includes(name.toLowerCase())) return address;
+
+  return `${name}, ${address}`;
+};
+
+const getLatLng = (location?: google.maps.LatLng | google.maps.LatLngLiteral) => {
+  if (!location) return null;
+
+  const lat = typeof location.lat === "function" ? location.lat() : location.lat;
+  const lng = typeof location.lng === "function" ? location.lng() : location.lng;
+
+  if (typeof lat !== "number" || typeof lng !== "number") {
+    return null;
+  }
+
+  return {lat, lng};
+};
 
 export default function AddressModal({show, onClose, onSave}: Props) {
   const {isLoaded} = useLoadScript({
@@ -33,55 +87,137 @@ export default function AddressModal({show, onClose, onSave}: Props) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [label, setLabel] = useState("Home");
   const [address, setAddress] = useState("");
-  const autocompleteRef = useRef<HTMLInputElement>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [placesLibrary, setPlacesLibrary] =
+    useState<PlacesAutocompleteLibrary | null>(null);
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const sessionTokenRef = useRef<unknown>(null);
+  const latestRequestIdRef = useRef(0);
 
-  // Initialize Autocomplete once loaded
   useEffect(() => {
-    if (isLoaded && autocompleteRef.current) {
-      try {
-        const autocomplete = new google.maps.places.Autocomplete(autocompleteRef.current, {
-          fields: ["formatted_address", "geometry", "name"],
-        });
+    if (!isLoaded) {
+      return;
+    }
 
-        autocomplete.addListener("place_changed", () => {
-          const place = autocomplete.getPlace();
-          if (place.geometry && place.geometry.location) {
-            const location = place.geometry.location;
-            const newCenter = {
-              lat: location.lat(),
-              lng: location.lng(),
-            };
-            setCenter(newCenter);
-            setAddress(place.formatted_address || place.name || "");
-            if (map) {
-              map.panTo(newCenter);
-              map.setZoom(17);
-            }
-          }
-        });
+    let isMounted = true;
+
+    const loadPlacesLibrary = async () => {
+      try {
+        const library = (await google.maps.importLibrary(
+          "places"
+        )) as unknown as PlacesAutocompleteLibrary;
+
+        if (isMounted) setPlacesLibrary(library);
       } catch (err) {
         console.error(
-          "Google Maps Autocomplete failed to initialize. " +
-          "Please ensure that the legacy 'Places API' is enabled in your Google Cloud Console " +
-          "for this API Key (https://console.cloud.google.com/apis/library/places-backend.googleapis.com).",
+          "Google Maps Place Autocomplete failed to initialize. Ensure Places API (New) is enabled for this API key.",
           err
         );
       }
-    }
-  }, [isLoaded, map]);
+    };
 
-  // 🔥 RESET WHEN MODAL OPENS
+    loadPlacesLibrary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoaded]);
+
+  useEffect(() => {
+    const query = searchInput.trim();
+
+    if (!show || !placesLibrary || query.length < MIN_AUTOCOMPLETE_CHARS) {
+      setSuggestions([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const requestId = latestRequestIdRef.current + 1;
+    latestRequestIdRef.current = requestId;
+
+    setIsSearching(true);
+
+    const debounceTimer = window.setTimeout(async () => {
+      try {
+        if (!sessionTokenRef.current) {
+          sessionTokenRef.current = new placesLibrary.AutocompleteSessionToken();
+        }
+
+        const response =
+          await placesLibrary.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+            input: query,
+            sessionToken: sessionTokenRef.current,
+          });
+
+        if (latestRequestIdRef.current === requestId) {
+          setSuggestions(response.suggestions || []);
+        }
+      } catch (err) {
+        if (latestRequestIdRef.current === requestId) {
+          setSuggestions([]);
+        }
+        console.error("Failed to fetch place suggestions.", err);
+      } finally {
+        if (latestRequestIdRef.current === requestId) {
+          setIsSearching(false);
+        }
+      }
+    }, AUTOCOMPLETE_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(debounceTimer);
+    };
+  }, [placesLibrary, searchInput, show]);
+
+  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
+    const placePrediction = suggestion.placePrediction;
+    if (!placePrediction) return;
+
+    const place = placePrediction.toPlace();
+    await place.fetchFields({
+      fields: ["displayName", "formattedAddress", "location"],
+    });
+
+    const selectedAddress = buildSelectedAddress(
+      place.displayName,
+      place.formattedAddress
+    );
+    const newCenter = getLatLng(place.location);
+
+    setSearchInput(placePrediction.text.toString());
+    setAddress(selectedAddress);
+    setSuggestions([]);
+    sessionTokenRef.current = null;
+
+    if (!newCenter) return;
+
+    setCenter(newCenter);
+
+    if (map) {
+      map.panTo(newCenter);
+      map.setZoom(17);
+    }
+  };
+
+  // Reset when modal opens
   useEffect(() => {
     if (show) {
       setCenter(defaultCenter);
       setLabel("Home");
       setAddress("");
+      setSearchInput("");
+      setSuggestions([]);
+      setIsSearching(false);
+      setIsSaving(false);
+      sessionTokenRef.current = null;
 
       if (map) {
         map.panTo(defaultCenter);
       }
     }
-  }, [show]);
+  }, [show, map]);
 
   if (!show) return null;
 
@@ -114,14 +250,43 @@ export default function AddressModal({show, onClose, onSave}: Props) {
 
           {/* SEARCH */}
           <div className="px-5 mb-4">
-            <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3">
-              <FaSearch className="text-gray-400 mr-3" />
-              <input
-                ref={autocompleteRef}
-                type="text"
-                placeholder="Enter a location"
-                className="bg-transparent outline-none w-full text-sm"
-              />
+            <div className="relative">
+              <div className="flex items-center bg-gray-100 rounded-xl px-4 py-3">
+                <FaSearch className="text-gray-400 mr-3" />
+                <input
+                  type="text"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Enter a location"
+                  className="bg-transparent outline-none w-full text-sm text-gray-900 placeholder:text-gray-400"
+                />
+              </div>
+
+              {(suggestions.length > 0 || isSearching) && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-lg">
+                  {isSearching ? (
+                    <div className="px-4 py-3 text-sm text-gray-400">
+                      Searching...
+                    </div>
+                  ) : (
+                    suggestions.map((suggestion, index) => {
+                      const placePrediction = suggestion.placePrediction;
+                      if (!placePrediction) return null;
+
+                      return (
+                        <button
+                          key={`${placePrediction.text.toString()}-${index}`}
+                          type="button"
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                          className="block w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                          {placePrediction.text.toString()}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -141,8 +306,8 @@ export default function AddressModal({show, onClose, onSave}: Props) {
               }}
             />
 
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none text-3xl">
-              📍
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="h-6 w-6 rounded-full border-4 border-[var(--primary-color)] bg-white shadow-md" />
             </div>
           </div>
 
@@ -178,18 +343,24 @@ export default function AddressModal({show, onClose, onSave}: Props) {
 
             {/* BUTTON */}
             <button
-              onClick={() => {
-                onSave({
-                  lat: center.lat,
-                  lng: center.lng,
-                  label,
-                  address,
-                });
-                onClose();
+              disabled={isSaving || !address.trim()}
+              onClick={async () => {
+                try {
+                  setIsSaving(true);
+                  await onSave({
+                    lat: center.lat,
+                    lng: center.lng,
+                    label,
+                    address: address.trim(),
+                  });
+                  onClose();
+                } finally {
+                  setIsSaving(false);
+                }
               }}
-              className="w-full bg-[var(--primary-color)] text-white py-4 rounded-full font-semibold"
+              className="w-full bg-[var(--primary-color)] text-white py-4 rounded-full font-semibold disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Confirm Location
+              {isSaving ? "Saving..." : "Confirm Location"}
             </button>
           </div>
         </div>

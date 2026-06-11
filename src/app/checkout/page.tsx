@@ -22,6 +22,7 @@ import { websiteService } from "@/api/services/websiteService";
 import { orderService } from "@/api/services/orderService";
 import { paymentService } from "@/api/services/paymentService";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 const RESTAURANT_ID = 1;
 
@@ -31,6 +32,11 @@ interface Address {
   lng: number;
   label: string;
   address: string;
+}
+
+interface SaveAddressResponse {
+  addresses?: Address[];
+  updatedAddress?: Address;
 }
 
 interface PaymentStep {
@@ -111,10 +117,30 @@ export default function CheckoutPage() {
 
   const handleAddAddress = async (data: Omit<Address, "id">) => {
     try {
-      await customerService.saveAddress(data);
-      await fetchAddresses();
+      const result = (await customerService.saveAddress(
+        data,
+      )) as SaveAddressResponse;
+
+      if (Array.isArray(result.addresses)) {
+        setAddresses(result.addresses);
+
+        const savedIndex = result.updatedAddress?.id
+          ? result.addresses.findIndex(
+              (item) => item.id === result.updatedAddress?.id,
+            )
+          : result.addresses.length - 1;
+
+        setSelectedIndex(savedIndex >= 0 ? savedIndex : result.addresses.length - 1);
+      } else {
+        await fetchAddresses();
+      }
+
+      setCheckoutError("");
+      toast.success("Address saved successfully");
     } catch (err) {
       console.error("Failed to save address", err);
+      toast.error("Failed to save address. Please try again.");
+      throw err;
     }
   };
 
