@@ -25,6 +25,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 
 const RESTAURANT_ID = 1;
+const TAX_RATE = 0.18;
 
 interface Address {
   id?: string;
@@ -189,7 +190,9 @@ export default function CheckoutPage() {
 
   const itemDiscount = originalSubtotal - subtotal;
   const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 2) : 0;
-  const total = subtotal - couponDiscount + deliveryCharge;
+  const taxableAmount = subtotal - couponDiscount;
+  const taxAmount = parseFloat((taxableAmount * TAX_RATE).toFixed(2));
+  const total = taxableAmount + taxAmount + deliveryCharge;
 
   const handleApplyCoupon = async (code: string) => {
     try {
@@ -339,6 +342,12 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-sm text-green-600 font-semibold">
                 <span>Discount (Coupon)</span>
                 <span>-€{parseFloat(successOrder.discount).toFixed(2)}</span>
+              </div>
+            )}
+            {parseFloat(successOrder.taxAmount) > 0 && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Tax (18%)</span>
+                <span>€{parseFloat(successOrder.taxAmount).toFixed(2)}</span>
               </div>
             )}
             {orderType !== "pickup" && (
@@ -717,6 +726,10 @@ export default function CheckoutPage() {
                         <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
+                    <div className="flex justify-between">
+                      <span>Tax (18%)</span>
+                      <span className="font-semibold text-gray-800">€{taxAmount.toFixed(2)}</span>
+                    </div>
                     <div className="flex justify-between">
                       <span>Delivery Charge</span>
                       {orderType === "pickup" ? (
