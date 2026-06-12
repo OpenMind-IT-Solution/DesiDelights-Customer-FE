@@ -131,15 +131,16 @@ export default function OrdersPage() {
     );
   }
 
-  // Active vs Previous Order division
+  const terminalStatuses = ["completed", "cancelled", "rejected", "failed"];
+
   const activeOrders = orders.filter((order) => {
     const status = order.status?.toLowerCase() || "";
-    return ["placed", "confirmed", "preparing", "accepted", "ready", "out_for_delivery", "picked_up"].includes(status);
+    return !terminalStatuses.includes(status);
   });
 
   const previousOrders = orders.filter((order) => {
     const status = order.status?.toLowerCase() || "";
-    return ["completed", "cancelled", "rejected", "failed"].includes(status);
+    return terminalStatuses.includes(status);
   });
 
   return (
@@ -236,6 +237,8 @@ function OrderCard({ order, active }: { order: Order; active?: boolean }) {
   const getStatusConfig = (status: string) => {
     const rawStatus = status?.toLowerCase() || "";
     switch (rawStatus) {
+      case "pending":
+        return { label: "Pending", classes: "bg-yellow-50 text-yellow-600 border border-yellow-200" };
       case "placed":
         return { label: "Order Placed", classes: "bg-teal-50 text-teal-600 border border-teal-200" };
       case "confirmed":
