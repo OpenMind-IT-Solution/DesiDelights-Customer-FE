@@ -26,7 +26,15 @@ const getPriceDetails = (price: number, offer?: string) => {
   return { originalPrice: price, finalPrice: price, hasDiscount: false };
 };
 
-const FeaturedItems = () => {
+interface FeaturedItemsProps {
+  categoryId?: string;
+  title?: string;
+  hideTitle?: boolean;
+  limit?: number;
+  compact?: boolean;
+}
+
+const FeaturedItems = ({ categoryId = "all", title, hideTitle = false, limit, compact = false }: FeaturedItemsProps) => {
   const {t} = useLanguage();
   const {cartItems, increaseQty, decreaseQty} = useCart();
 
@@ -53,13 +61,20 @@ const FeaturedItems = () => {
     return <div className="py-10 text-center">Loading featured items...</div>;
   }
 
-  return (
-    <section className="pt-0 pb-10 md:pb-14">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
-        <h2 className="text-3xl font-black mb-8">{t("featuredItems")}</h2>
+  const filteredItems = categoryId && categoryId !== "all"
+    ? featuredItems.filter((item) => String(item.categoryId) === String(categoryId))
+    : featuredItems;
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-          {featuredItems.map((item) => {
+  const displayItems = limit ? filteredItems.slice(0, limit) : filteredItems;
+
+  const content = (
+    <>
+      {!hideTitle && (
+        <h2 className="text-3xl font-black mb-8">{title || t("featuredItems")}</h2>
+      )}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {displayItems.map((item) => {
             const cartItem = cartItems.find((i) => i.id === item.id);
             const { originalPrice, finalPrice, hasDiscount } = getPriceDetails(item.price, item.offer);
 
@@ -136,9 +151,19 @@ const FeaturedItems = () => {
             onClose={() => setSelectedItem(null)}
           />
         )}
+    </>
+  );
+
+  if (compact) return content;
+
+  return (
+    <section className="pt-0 pb-10 md:pb-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
+        {content}
       </div>
     </section>
   );
 };
 
 export default FeaturedItems;
+
