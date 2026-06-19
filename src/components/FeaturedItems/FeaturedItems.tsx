@@ -85,7 +85,7 @@ const FeaturedItems = ({ categoryId = "all", title, hideTitle = false, limit, co
               >
                 <div className="relative w-full h-40 bg-gray-100">
                   <img
-                    src={getCleanImageUrl(item.image)}
+                    src={getCleanImageUrl(item.images?.[0])}
                     alt={item.name}
                     className="object-cover w-full h-full absolute inset-0"
                   />
