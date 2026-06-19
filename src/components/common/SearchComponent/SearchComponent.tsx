@@ -135,7 +135,7 @@ const SearchComponent = () => {
                     >
                       <div className="relative w-12 h-12 flex-shrink-0 rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
                         <img
-                          src={getCleanImageUrl(item.image)}
+                          src={getCleanImageUrl(item.images?.[0])}
                           alt={item.name}
                           className="object-cover w-full h-full absolute inset-0"
                         />

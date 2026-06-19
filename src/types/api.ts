@@ -23,7 +23,6 @@ export interface MenuItem {
   name: string;
   description: string;
   price: number;
-  image?: string;
   images?: string[];
   categoryId: string;
   isActive: boolean;

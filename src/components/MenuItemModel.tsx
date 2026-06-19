@@ -58,7 +58,7 @@ const MenuItemModal = ({item, onClose}: Props) => {
           name: item.name,
           price: discountedPrice,
           originalPrice: item.price,
-          image: getCleanImageUrl(item.image),
+          image: getCleanImageUrl(item.images?.[0]),
           size: null,
         });
     }
@@ -85,7 +85,7 @@ const MenuItemModal = ({item, onClose}: Props) => {
         <div className="flex gap-4 mb-4">
           <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
             <img
-              src={getCleanImageUrl(item.image)}
+              src={getCleanImageUrl(item.images?.[0])}
               alt={item.name}
               className="object-cover w-full h-full absolute inset-0"
             />
