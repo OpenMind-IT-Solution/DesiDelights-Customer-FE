@@ -241,7 +241,7 @@ const MenuPageContent = () => {
                   {/* Image & Badges */}
                   <div className="relative w-full h-48 bg-gray-50 overflow-hidden">
                     <img
-                      src={getCleanImageUrl(item.image)}
+                      src={getCleanImageUrl(item.images?.[0])}
                       alt={item.name}
                       className="object-cover w-full h-full absolute inset-0 transition-transform duration-500 group-hover:scale-105"
                     />

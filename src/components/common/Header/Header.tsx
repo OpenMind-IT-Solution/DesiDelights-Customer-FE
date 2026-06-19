@@ -8,6 +8,7 @@ import LoginButton from "./LoginButton";
 import Menu from "./menu/Menu";
 import CartButton from "./CartButton";
 import CartDrawer from "./CartDrawer";
+import ClosedAnnouncementBar from "../ClosedAnnouncementBar/ClosedAnnouncementBar";
 import {useState} from "react";
 
 const Header = () => {
@@ -44,6 +45,7 @@ const Header = () => {
         </div>
       </header>
 
+      <ClosedAnnouncementBar />
       <CartDrawer show={showCart} onClose={() => setShowCart(false)} />
     </>
   );
