@@ -18,9 +18,24 @@ const ClosedAnnouncementBar = () => {
   useEffect(() => {
     const check = () => {
       const now = new Date();
-      const h = now.getHours();
-      const d = now.getDay();
-      setVisible(true);
+      const belgiumTime = new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Europe/Brussels",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: false,
+      }).formatToParts(now);
+
+      const hour = Number(
+        belgiumTime.find((part) => part.type === "hour")?.value ?? "0"
+      );
+      const shouldShow = hour === 8;
+
+      setVisible(shouldShow);
+
+      if (!shouldShow) {
+        setMessage("");
+        return;
+      }
 
       const next = new Date(now);
       next.setDate(next.getDate() + 1);

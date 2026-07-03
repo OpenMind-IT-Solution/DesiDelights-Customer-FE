@@ -62,7 +62,10 @@ const FeaturedItems = ({ categoryId = "all", title, hideTitle = false, limit, co
   }
 
   const filteredItems = categoryId && categoryId !== "all"
-    ? featuredItems.filter((item) => String(item.categoryId) === String(categoryId))
+    ? featuredItems.filter((item) => {
+        const ids = Array.isArray(item.categoryId) ? item.categoryId : [item.categoryId]
+        return ids.some(id => String(id) === String(categoryId))
+      })
     : featuredItems;
 
   const displayItems = limit ? filteredItems.slice(0, limit) : filteredItems;

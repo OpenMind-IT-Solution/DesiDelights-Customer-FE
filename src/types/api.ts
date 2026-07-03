@@ -24,7 +24,7 @@ export interface MenuItem {
   description: string;
   price: number;
   images?: string[];
-  categoryId: string;
+  categoryId: number[] | string;
   isActive: boolean;
   tag?: string;
   offer?: string;

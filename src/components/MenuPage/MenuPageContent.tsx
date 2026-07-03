@@ -92,7 +92,10 @@ const MenuPageContent = () => {
   // Filter menu items dynamically by selected category
   const finalItems = activeCategoryId === "all"
     ? searchedItems
-    : searchedItems.filter((item) => String(item.categoryId) === String(activeCategoryId));
+    : searchedItems.filter((item) => {
+        const ids = Array.isArray(item.categoryId) ? item.categoryId : [item.categoryId]
+        return ids.some(id => String(id) === String(activeCategoryId))
+      })
 
   // Sort filtered menu items dynamically
   const sortedItems = [...finalItems].sort((a, b) => {
