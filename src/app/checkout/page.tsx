@@ -79,6 +79,7 @@ export default function CheckoutPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [successOrder, setSuccessOrder] = useState<any | null>(null);
+  const [showClosedModal, setShowClosedModal] = useState(false);
 
   // PAYMENT GATEWAY
   const [paymentGatewayEnabled, setPaymentGatewayEnabled] = useState(false);
@@ -216,6 +217,13 @@ export default function CheckoutPage() {
     }
     if (orderType === "delivery" && addresses.length === 0) {
       setCheckoutError("Please add a delivery address.");
+      return;
+    }
+
+    // Block orders after 8 PM Belgium time
+    const belgiumHour = new Date().toLocaleString("en-GB", { timeZone: "Etc/GMT-2", hour: "numeric", hour12: false });
+    if (Number(belgiumHour) >= 20) {
+      setShowClosedModal(true);
       return;
     }
 
@@ -841,6 +849,25 @@ export default function CheckoutPage() {
         onClose={() => setShowCouponModal(false)}
         onApply={handleApplyCoupon}
       />
+
+      {/* Closed after 8 PM modal */}
+      {showClosedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-sm w-full text-center">
+            <div className="text-5xl mb-4">😴</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">We&apos;re Closed!</h3>
+            <p className="text-gray-600 mb-6">
+              Orders are not accepted after 8 PM. We&apos;ll be back tomorrow at 11:00 AM. Thank you!
+            </p>
+            <button
+              onClick={() => setShowClosedModal(false)}
+              className="bg-[#FA664D] text-white px-6 py-2.5 rounded-full font-semibold hover:opacity-90 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

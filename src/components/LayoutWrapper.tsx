@@ -3,6 +3,7 @@
 import {usePathname} from "next/navigation";
 import Header from "@/components/common/Header/Header";
 import Footer from "@/components/common/Footer/Footer";
+import WhatsAppWidget from "@/components/WhatsAppWidget";
 
 export default function LayoutWrapper({children}: {children: React.ReactNode}) {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ export default function LayoutWrapper({children}: {children: React.ReactNode}) {
         {children}
       </main>
       {!hideLayout && <Footer />}
+      <WhatsAppWidget />
     </div>
   );
 }

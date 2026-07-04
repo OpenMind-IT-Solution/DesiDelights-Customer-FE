@@ -79,7 +79,6 @@ const ClosedAnnouncementBar = () => {
     const textWidth = textRef.current.offsetWidth;
 
     const start = containerWidth;
-    const center = Math.max(0, (containerWidth - textWidth) / 2);
     const end = -(textWidth + 20);
 
     let styleEl = document.getElementById(STYLE_ID);
@@ -92,8 +91,6 @@ const ClosedAnnouncementBar = () => {
     styleEl.textContent = `
       @keyframes announcementScroll {
         0% { transform: translateX(${start}px); }
-        22% { transform: translateX(${center}px); }
-        50% { transform: translateX(${center}px); }
         100% { transform: translateX(${end}px); }
       }
     `;
