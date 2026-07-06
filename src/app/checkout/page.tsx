@@ -25,7 +25,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 
 const RESTAURANT_ID = 1;
-const TAX_RATE = 0.18;
+const DEFAULT_VAT_RATE = 12;
 
 interface Address {
   id?: string;
@@ -191,9 +191,16 @@ export default function CheckoutPage() {
 
   const itemDiscount = originalSubtotal - subtotal;
   const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 2) : 0;
-  const taxableAmount = subtotal - couponDiscount;
-  const taxAmount = parseFloat((taxableAmount * TAX_RATE).toFixed(2));
-  const total = taxableAmount + taxAmount + deliveryCharge;
+
+  const vatByRate: Record<number, number> = {};
+  const vatTotal = cartItems.reduce((sum, item) => {
+    const rate = item.vatRate ?? DEFAULT_VAT_RATE;
+    const vat = item.price * item.qty * rate / 100;
+    vatByRate[rate] = (vatByRate[rate] || 0) + vat;
+    return sum + vat;
+  }, 0);
+
+  const total = subtotal + vatTotal + deliveryCharge - couponDiscount;
 
   const handleApplyCoupon = async (code: string) => {
     try {
@@ -354,7 +361,7 @@ export default function CheckoutPage() {
             )}
             {parseFloat(successOrder.taxAmount) > 0 && (
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Tax (18%)</span>
+                <span>VAT</span>
                 <span>€{parseFloat(successOrder.taxAmount).toFixed(2)}</span>
               </div>
             )}
@@ -734,24 +741,28 @@ export default function CheckoutPage() {
                         <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span>Tax (18%)</span>
-                      <span className="font-semibold text-gray-800">€{taxAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Delivery Charge</span>
-                      {orderType === "pickup" ? (
-                        <span className="text-green-600 font-bold">FREE TAKEOUT</span>
-                      ) : deliveryCharge === 0 ? (
-                        <span className="text-green-600 font-bold">FREE DELIVERY</span>
-                      ) : (
-                        <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
-                      )}
-                    </div>
-                    {orderType === "delivery" && subtotal <= 30 && (
-                      <p className="text-[10px] text-gray-400 text-right italic font-medium">
-                        Add €{(30 - subtotal).toFixed(2)} more for free delivery!
-                      </p>
+                    {Object.entries(vatByRate).map(([rate, vat]) => (
+                      <div key={rate} className="flex justify-between">
+                        <span>VAT {rate}%{rate === '12' ? ' (Food)' : ' (Drinks)'}</span>
+                        <span className="font-semibold text-gray-800">€{vat.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {orderType === "delivery" && (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Delivery Charge</span>
+                          {deliveryCharge === 0 ? (
+                            <span className="text-green-600 font-bold">FREE DELIVERY</span>
+                          ) : (
+                            <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
+                          )}
+                        </div>
+                        {subtotal <= 30 && (
+                          <p className="text-[10px] text-gray-400 text-right italic font-medium">
+                            Add €{(30 - subtotal).toFixed(2)} more for free delivery!
+                          </p>
+                        )}
+                      </>
                     )}
                     <hr className="border-gray-100" />
                     <div className="flex justify-between font-bold text-base text-gray-800 pt-1">

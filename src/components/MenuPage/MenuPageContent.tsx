@@ -2,9 +2,10 @@
 
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useCart } from "@/app/context/CartContext";
-import { FaInfoCircle, FaSearch, FaUtensils } from "react-icons/fa";
+import { FaInfoCircle, FaSearch, FaUtensils, FaSortAmountDown } from "react-icons/fa";
 import { IoCloseOutline } from "react-icons/io5";
 import { PiBagSimpleFill } from "react-icons/pi";
+import { HiFilter } from "react-icons/hi";
 import Button from "../common/Button/Button";
 import MenuSlider from "../MenuSection/MenuSider/MenuSlider";
 import { useState, useEffect } from "react";
@@ -40,6 +41,7 @@ const MenuPageContent = () => {
   const [activeCategoryId, setActiveCategoryId] = useState<string>("all");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [sortBy, setSortBy] = useState<string>("default");
+  const [showSortModal, setShowSortModal] = useState(false);
 
   // Fetch categories and menu items
   useEffect(() => {
@@ -107,12 +109,6 @@ const MenuPageContent = () => {
     if (sortBy === "price-desc") {
       return getFinalPrice(b) - getFinalPrice(a);
     }
-    if (sortBy === "name-asc") {
-      return a.name.localeCompare(b.name);
-    }
-    if (sortBy === "name-desc") {
-      return b.name.localeCompare(a.name);
-    }
     if (sortBy === "offers") {
       const hasOfferA = a.offer ? 1 : 0;
       const hasOfferB = b.offer ? 1 : 0;
@@ -155,9 +151,9 @@ const MenuPageContent = () => {
       {/* Sticky Categories Selector & Search Bar */}
       <div className="sticky top-[84px] md:top-[120px] z-30 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300 py-3 sm:py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-20">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Search Box and Sort Selector */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:max-w-xl">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+              {/* Search Box and Sort Selector */}
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto lg:flex-shrink-0">
               {/* Search Box */}
               <div className="relative flex items-center w-full">
                 <span className="absolute left-4 text-gray-400">
@@ -180,25 +176,15 @@ const MenuPageContent = () => {
                 )}
               </div>
 
-              {/* Sort Filter Dropdown */}
-              <div className="relative flex items-center w-full sm:max-w-[200px] flex-shrink-0">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-100 hover:border-gray-200 focus:border-orange-300 focus:bg-white rounded-full py-2.5 pl-4 pr-8 text-xs font-bold outline-none cursor-pointer appearance-none transition-all duration-300 text-gray-600 shadow-inner"
+              {/* Sort Filter Button */}
+              <div className="relative flex items-center flex-shrink-0">
+                <button
+                  onClick={() => setShowSortModal(true)}
+                  className="flex items-center gap-2 bg-gray-50 border border-gray-100 hover:border-gray-200 hover:bg-gray-100 rounded-full py-2.5 px-4 text-xs font-bold outline-none cursor-pointer transition-all duration-300 text-gray-600 shadow-inner"
                 >
-                  <option value="default">Sort: Default</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-                  <option value="name-asc">Name: A to Z</option>
-                  <option value="name-desc">Name: Z to A</option>
-                  <option value="offers">Offers & Discounts</option>
-                </select>
-                <div className="pointer-events-none absolute right-4 text-gray-400">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                  </svg>
-                </div>
+                  <HiFilter className="text-base" />
+                  <span>{sortBy === 'default' ? 'Sort' : sortBy === 'price-asc' ? 'Price: Low to High' : sortBy === 'price-desc' ? 'Price: High to Low' : 'Offers & Discounts'}</span>
+                </button>
               </div>
             </div>
 
@@ -357,6 +343,51 @@ const MenuPageContent = () => {
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
         />
+      )}
+
+      {/* Sort Modal (Swiggy/Zomato style) */}
+      {showSortModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="fixed inset-0 bg-black/40" onClick={() => setShowSortModal(false)} />
+          <div className="relative w-full max-w-lg bg-white rounded-t-2xl shadow-xl animate-slide-up pb-8">
+            <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-gray-100">
+              <h3 className="text-base font-extrabold text-gray-800">Sort Options</h3>
+              <button onClick={() => setShowSortModal(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                <IoCloseOutline className="text-2xl" />
+              </button>
+            </div>
+            <div className="px-2 py-2">
+              {[
+                { value: 'default', label: 'Default' },
+                { value: 'price-asc', label: 'Price: Low to High' },
+                { value: 'price-desc', label: 'Price: High to Low' },
+                { value: 'offers', label: 'Offers & Discounts' },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => {
+                    setSortBy(option.value);
+                    setShowSortModal(false);
+                  }}
+                  className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-semibold cursor-pointer transition-all duration-200 ${
+                    sortBy === option.value
+                      ? 'bg-[var(--primary-color)]/10 text-[var(--primary-color)]'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                    sortBy === option.value ? 'border-[var(--primary-color)]' : 'border-gray-300'
+                  }`}>
+                    {sortBy === option.value && (
+                      <div className="w-2.5 h-2.5 rounded-full bg-[var(--primary-color)]" />
+                    )}
+                  </div>
+                  <span>{option.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

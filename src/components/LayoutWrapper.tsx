@@ -9,6 +9,8 @@ export default function LayoutWrapper({children}: {children: React.ReactNode}) {
   const pathname = usePathname();
 
   const hideRoutes = [
+    "/login",
+    "/register",
     "/forgot-password",
     "/verify",
     "/reset-password",

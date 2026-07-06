@@ -28,6 +28,7 @@ export interface MenuItem {
   isActive: boolean;
   tag?: string;
   offer?: string;
+  vatRate?: number;
 }
 
 export interface AuthResponse {

@@ -12,6 +12,7 @@ type CartItem = {
   originalPrice?: number;
   image: string;
   qty: number;
+  vatRate?: number;
 };
 
 type CartContextType = {
