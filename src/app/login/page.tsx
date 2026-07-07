@@ -115,15 +115,14 @@ export default function LoginPage() {
       toast.success("Login successful ✅");
       router.push("/");
     } catch (error: unknown) {
-      const errorMessage =
+      const errMsg =
         typeof error === "object" &&
         error !== null &&
-        "response" in error &&
-        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+        "response" in error
           ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-          : "Login failed ❌";
+          : undefined;
 
-      setErrors({ general: errorMessage });
+      setErrors({ general: errMsg ?? "Login failed ❌" });
     } finally {
       setLoading(false);
     }
@@ -162,15 +161,14 @@ export default function LoginPage() {
       toast.success("Guest login successful ✅");
       router.push("/");
     } catch (error: unknown) {
-      const errorMessage =
+      const errMsg =
         typeof error === "object" &&
         error !== null &&
-        "response" in error &&
-        typeof (error as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+        "response" in error
           ? (error as { response?: { data?: { message?: string } } }).response?.data?.message
-          : "Guest login failed ❌";
+          : undefined;
 
-      setErrors({ general: errorMessage });
+      setErrors({ general: errMsg ?? "Guest login failed ❌" });
     } finally {
       setLoading(false);
     }

@@ -227,9 +227,13 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Block orders after 8 PM Belgium time
+    // Block orders after closing time Belgium time
+    const belgiumDate = new Date().toLocaleString("en-GB", { timeZone: "Etc/GMT-2" });
     const belgiumHour = new Date().toLocaleString("en-GB", { timeZone: "Etc/GMT-2", hour: "numeric", hour12: false });
-    if (Number(belgiumHour) >= 20) {
+    const belgiumDay = new Date(belgiumDate).getDay();
+    const isWeekend = belgiumDay === 0 || belgiumDay === 6;
+    const closeHour = isWeekend ? 22 : 21;
+    if (Number(belgiumHour) >= closeHour) {
       setShowClosedModal(true);
       return;
     }
@@ -861,14 +865,21 @@ export default function CheckoutPage() {
         onApply={handleApplyCoupon}
       />
 
-      {/* Closed after 8 PM modal */}
+      {/* Closed after hours modal */}
       {showClosedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-sm w-full text-center">
             <div className="text-5xl mb-4">😴</div>
             <h3 className="text-xl font-bold text-gray-800 mb-2">We&apos;re Closed!</h3>
             <p className="text-gray-600 mb-6">
-              Orders are not accepted after 8 PM. We&apos;ll be back tomorrow at 11:00 AM. Thank you!
+              {(() => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const td = tomorrow.getDay();
+                const isW = td === 0 || td === 6;
+                const oh = isW ? "4:00 PM" : "11:00 AM";
+                return `Orders are not accepted now. We'll be back tomorrow at ${oh}. Thank you!`;
+              })()}
             </p>
             <button
               onClick={() => setShowClosedModal(false)}

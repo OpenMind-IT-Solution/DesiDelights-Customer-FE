@@ -44,7 +44,10 @@ const ClosedAnnouncementBar = () => {
     const check = () => {
       const { hour, dayOfWeek: day } = getBelgiumDate();
 
-      const isClosed = hour < 11 || hour >= 20 || day === 3;
+      const isWeekend = day === 0 || day === 6;
+      const openHour = isWeekend ? 16 : 11;
+      const closeHour = isWeekend ? 22 : 21;
+      const isClosed = hour < openHour || hour >= closeHour;
 
       if (!isClosed) {
         setVisible(false);
@@ -53,17 +56,19 @@ const ClosedAnnouncementBar = () => {
 
       setVisible(true);
 
-      const openToday = hour < 11 && day !== 3;
-      let offset = openToday ? 0 : 1;
-      let next;
-      do {
-        next = getBelgiumDate(offset);
-        offset++;
-      } while (next.dayOfWeek === 3);
-      next = getBelgiumDate(offset - 1);
+      const openToday = isWeekend ? hour < 16 : hour < 11;
+      const offset = openToday ? 0 : 1;
+      const next = getBelgiumDate(offset);
+
+      const nextOpenHour = next.dayOfWeek === 0 || next.dayOfWeek === 6 ? 16 : 11;
+      const fmtHour = (h: number) => {
+        if (h === 11) return "11:00 AM";
+        if (h === 16) return "4:00 PM";
+        return `${h}:00`;
+      };
 
       setMessage(
-        `We are closed now! We'll be back ${next.dayName} at 11:00 AM. Thank you for your patience.`
+        `We are closed now! We'll be back ${next.dayName} at ${fmtHour(nextOpenHour)}. Thank you for your patience.`
       );
     };
 
