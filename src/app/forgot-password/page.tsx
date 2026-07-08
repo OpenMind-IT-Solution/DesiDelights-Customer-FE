@@ -81,7 +81,7 @@ export default function Page() {
                 setErrors((prev) => ({ ...prev, email: "" }));
               }}
               required
-              placeholder="e.g. name@example.com"
+              placeholder="e.g. name@desidelights.be"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 
               focus:outline-none focus:ring-2 focus:ring-[#FA664D] 
               focus:border-[#FA664D] transition mb-6"
