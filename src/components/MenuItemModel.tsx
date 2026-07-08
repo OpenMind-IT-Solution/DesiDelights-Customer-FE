@@ -53,14 +53,15 @@ const MenuItemModal = ({item, onClose}: Props) => {
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {
-        addToCart({
-          id: item.id,
-          name: item.name,
-          price: discountedPrice,
-          originalPrice: item.price,
-          image: getCleanImageUrl(item.images?.[0]),
-          size: null,
-        });
+      addToCart({
+        id: item.id,
+        name: item.name,
+        price: discountedPrice,
+        originalPrice: item.price,
+        image: getCleanImageUrl(item.images?.[0]),
+        size: null,
+        vatRate: item.vatRate,
+      });
     }
 
     onClose();
