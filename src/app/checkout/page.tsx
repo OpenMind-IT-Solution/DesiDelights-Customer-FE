@@ -25,7 +25,7 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 
 const RESTAURANT_ID = 1;
-const TAX_RATE = 0.18;
+const DEFAULT_VAT_RATE = 12;
 
 interface Address {
   id?: string;
@@ -79,6 +79,7 @@ export default function CheckoutPage() {
   const [placingOrder, setPlacingOrder] = useState(false);
   const [checkoutError, setCheckoutError] = useState("");
   const [successOrder, setSuccessOrder] = useState<any | null>(null);
+  const [showClosedModal, setShowClosedModal] = useState(false);
 
   // PAYMENT GATEWAY
   const [paymentGatewayEnabled, setPaymentGatewayEnabled] = useState(false);
@@ -190,9 +191,16 @@ export default function CheckoutPage() {
 
   const itemDiscount = originalSubtotal - subtotal;
   const deliveryCharge = orderType === "delivery" ? (subtotal > 30 ? 0 : 2) : 0;
-  const taxableAmount = subtotal - couponDiscount;
-  const taxAmount = parseFloat((taxableAmount * TAX_RATE).toFixed(2));
-  const total = taxableAmount + taxAmount + deliveryCharge;
+
+  const vatByRate: Record<number, number> = {};
+  const vatTotal = cartItems.reduce((sum, item) => {
+    const rate = item.vatRate ?? DEFAULT_VAT_RATE;
+    const vat = item.price * item.qty * rate / 100;
+    vatByRate[rate] = (vatByRate[rate] || 0) + vat;
+    return sum + vat;
+  }, 0);
+
+  const total = subtotal + vatTotal + deliveryCharge - couponDiscount;
 
   const handleApplyCoupon = async (code: string) => {
     try {
@@ -216,6 +224,17 @@ export default function CheckoutPage() {
     }
     if (orderType === "delivery" && addresses.length === 0) {
       setCheckoutError("Please add a delivery address.");
+      return;
+    }
+
+    // Block orders after closing time Belgium time
+    const belgiumDate = new Date().toLocaleString("en-GB", { timeZone: "Etc/GMT-2" });
+    const belgiumHour = new Date().toLocaleString("en-GB", { timeZone: "Etc/GMT-2", hour: "numeric", hour12: false });
+    const belgiumDay = new Date(belgiumDate).getDay();
+    const isWeekend = belgiumDay === 0 || belgiumDay === 6;
+    const closeHour = isWeekend ? 22 : 21;
+    if (Number(belgiumHour) >= closeHour) {
+      setShowClosedModal(true);
       return;
     }
 
@@ -346,7 +365,7 @@ export default function CheckoutPage() {
             )}
             {parseFloat(successOrder.taxAmount) > 0 && (
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Tax (18%)</span>
+                <span>VAT</span>
                 <span>€{parseFloat(successOrder.taxAmount).toFixed(2)}</span>
               </div>
             )}
@@ -726,24 +745,28 @@ export default function CheckoutPage() {
                         <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
-                    <div className="flex justify-between">
-                      <span>Tax (18%)</span>
-                      <span className="font-semibold text-gray-800">€{taxAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Delivery Charge</span>
-                      {orderType === "pickup" ? (
-                        <span className="text-green-600 font-bold">FREE TAKEOUT</span>
-                      ) : deliveryCharge === 0 ? (
-                        <span className="text-green-600 font-bold">FREE DELIVERY</span>
-                      ) : (
-                        <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
-                      )}
-                    </div>
-                    {orderType === "delivery" && subtotal <= 30 && (
-                      <p className="text-[10px] text-gray-400 text-right italic font-medium">
-                        Add €{(30 - subtotal).toFixed(2)} more for free delivery!
-                      </p>
+                    {Object.entries(vatByRate).map(([rate, vat]) => (
+                      <div key={rate} className="flex justify-between">
+                        <span>VAT {rate}%{rate === '12' ? ' (Food)' : ' (Drinks)'}</span>
+                        <span className="font-semibold text-gray-800">€{vat.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {orderType === "delivery" && (
+                      <>
+                        <div className="flex justify-between">
+                          <span>Delivery Charge</span>
+                          {deliveryCharge === 0 ? (
+                            <span className="text-green-600 font-bold">FREE DELIVERY</span>
+                          ) : (
+                            <span className="font-semibold text-gray-800">€{deliveryCharge.toFixed(2)}</span>
+                          )}
+                        </div>
+                        {subtotal <= 30 && (
+                          <p className="text-[10px] text-gray-400 text-right italic font-medium">
+                            Add €{(30 - subtotal).toFixed(2)} more for free delivery!
+                          </p>
+                        )}
+                      </>
                     )}
                     <hr className="border-gray-100" />
                     <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
@@ -841,6 +864,32 @@ export default function CheckoutPage() {
         onClose={() => setShowCouponModal(false)}
         onApply={handleApplyCoupon}
       />
+
+      {/* Closed after hours modal */}
+      {showClosedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 mx-4 max-w-sm w-full text-center">
+            <div className="text-5xl mb-4">😴</div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">We&apos;re Closed!</h3>
+            <p className="text-gray-600 mb-6">
+              {(() => {
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const td = tomorrow.getDay();
+                const isW = td === 0 || td === 6;
+                const oh = isW ? "4:00 PM" : "11:00 AM";
+                return `Orders are not accepted now. We'll be back tomorrow at ${oh}. Thank you!`;
+              })()}
+            </p>
+            <button
+              onClick={() => setShowClosedModal(false)}
+              className="bg-[#FA664D] text-white px-6 py-2.5 rounded-full font-semibold hover:opacity-90 transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

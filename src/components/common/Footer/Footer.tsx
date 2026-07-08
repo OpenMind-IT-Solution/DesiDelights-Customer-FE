@@ -102,7 +102,7 @@ const Footer = () => {
               href={"tel:+3232232232"}
             >
               <LiaHeadphonesSolid />
-              +32 332 556 2224
+              +32 456 863 496
             </Link>
           </div>
         </div>

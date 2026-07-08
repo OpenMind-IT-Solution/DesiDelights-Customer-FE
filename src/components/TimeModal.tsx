@@ -10,11 +10,19 @@ const generateTimes = (selectedDay: "today" | "tomorrow" = "today") => {
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
 
-  // Closing time is 8 PM (20:00)
-  const CLOSING_HOUR = 20;
+  // Determine day of week for the selected day
+  const dayOffset = selectedDay === "today" ? 0 : 1;
+  const targetDate = new Date(now);
+  targetDate.setDate(targetDate.getDate() + dayOffset);
+  const dayOfWeek = targetDate.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+  // Closing time: Mon-Fri 9 PM (21), Sat-Sun 10 PM (22)
+  const CLOSING_HOUR = isWeekend ? 22 : 21;
   
-  // Starting time: 4 PM (16:00) for today, 11 AM (11:00) for tomorrow
-  const startHour = selectedDay === "today" ? 16 : 11;
+  // Starting time: 4 PM (16) for today, openHour for tomorrow
+  const openHour = isWeekend ? 16 : 11;
+  const startHour = selectedDay === "today" ? 16 : openHour;
   
   let hour = startHour;
   let minute = 0;
