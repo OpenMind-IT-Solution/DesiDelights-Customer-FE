@@ -12,6 +12,12 @@ import { websiteService } from "@/api/services/websiteService";
 import { MenuItem } from "@/types/api";
 import { getCleanImageUrl } from "@/utils/image";
 
+const DEFAULT_VAT_RATE = 12;
+
+const getPriceWithVat = (price: number, vatRate?: number, priceWithVat?: number): number => {
+  return priceWithVat ?? price * (1 + (vatRate ?? DEFAULT_VAT_RATE) / 100);
+};
+
 // Helper utility to calculate discounted prices on the fly
 const getPriceDetails = (price: number, offer?: string) => {
   if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
@@ -114,15 +120,15 @@ const FeaturedItems = ({ categoryId = "all", title, hideTitle = false, limit, co
                       {hasDiscount ? (
                         <>
                           <span className="text-[10px] text-gray-400 line-through leading-none mb-1">
-                            €{originalPrice.toFixed(2)}
+                            €{getPriceWithVat(originalPrice, item.vatRate, item.priceWithVat).toFixed(2)}
                           </span>
                           <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
-                            €{finalPrice.toFixed(2)}
+                            €{getPriceWithVat(finalPrice, item.vatRate).toFixed(2)}
                           </span>
                         </>
                       ) : (
                         <span className="text-[var(--primary-color)] font-extrabold text-sm leading-none">
-                          €{item.price.toFixed(2)}
+                          €{getPriceWithVat(item.price, item.vatRate, item.priceWithVat).toFixed(2)}
                         </span>
                       )}
                     </div>

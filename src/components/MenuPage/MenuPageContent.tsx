@@ -15,6 +15,12 @@ import { Category, MenuItem } from "@/types/api";
 import { getCleanImageUrl } from "@/utils/image";
 import MenuItemModal from "../MenuItemModel";
 
+const DEFAULT_VAT_RATE = 12;
+
+const getPriceWithVat = (price: number, vatRate?: number, priceWithVat?: number): number => {
+  return priceWithVat ?? price * (1 + (vatRate ?? DEFAULT_VAT_RATE) / 100);
+};
+
 // Helper utility to calculate discounted prices on the fly
 const getPriceDetails = (price: number, offer?: string) => {
   if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
@@ -307,15 +313,15 @@ const MenuPageContent = () => {
                         {hasDiscount ? (
                           <>
                             <span className="text-gray-400 line-through text-[10px] font-semibold">
-                              €{item.price.toFixed(2)}
+                              €{getPriceWithVat(item.price, item.vatRate, item.priceWithVat).toFixed(2)}
                             </span>
                             <span className="text-[var(--primary-color)] font-extrabold text-lg leading-tight">
-                              €{finalPrice.toFixed(2)}
+                              €{getPriceWithVat(finalPrice, item.vatRate).toFixed(2)}
                             </span>
                           </>
                         ) : (
                           <span className="text-[var(--primary-color)] font-extrabold text-lg">
-                            €{item.price.toFixed(2)}
+                            €{getPriceWithVat(item.price, item.vatRate, item.priceWithVat).toFixed(2)}
                           </span>
                         )}
                       </div>

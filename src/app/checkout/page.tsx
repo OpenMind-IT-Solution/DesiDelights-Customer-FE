@@ -19,6 +19,7 @@ import CouponModal from "@/components/CouponModal";
 import PaymentModal from "@/components/PaymentModal";
 import { customerService } from "@/api/services/customerService";
 import { websiteService } from "@/api/services/websiteService";
+import { MenuItem } from "@/types/api";
 import { orderService } from "@/api/services/orderService";
 import { paymentService } from "@/api/services/paymentService";
 import Link from "next/link";
@@ -88,6 +89,18 @@ export default function CheckoutPage() {
 
   // DELIVERY SETTING
   const [isDeliveryEnabled, setIsDeliveryEnabled] = useState(true);
+
+  // Refresh vatRates from backend (admin may have changed category VAT)
+  const [vatRateMap, setVatRateMap] = useState<Record<string, number>>({});
+  useEffect(() => {
+    websiteService.getMenuItems({ limit: 1000 }).then(items => {
+      const map: Record<string, number> = {};
+      items.forEach((item: MenuItem) => {
+        map[item.id] = item.vatRate ?? DEFAULT_VAT_RATE;
+      });
+      setVatRateMap(map);
+    }).catch(() => {});
+  }, []);
 
   // Fetch addresses + payment config + delivery setting on load
   useEffect(() => {
@@ -194,7 +207,7 @@ export default function CheckoutPage() {
 
   const vatByRate: Record<number, number> = {};
   const vatTotal = cartItems.reduce((sum, item) => {
-    const rate = item.vatRate ?? DEFAULT_VAT_RATE;
+    const rate = vatRateMap[item.id] ?? item.vatRate ?? DEFAULT_VAT_RATE;
     const vat = item.price * item.qty * rate / 100;
     vatByRate[rate] = (vatByRate[rate] || 0) + vat;
     return sum + vat;
@@ -728,9 +741,9 @@ export default function CheckoutPage() {
                   {/* Billing calculations */}
                   <div className="space-y-3 text-sm text-gray-600 mb-6">
                     <div className="flex justify-between">
-                      <span>Subtotal</span>
+                      <span>Net Price</span>
                       <span className="font-semibold text-gray-800">
-                        €{originalSubtotal.toFixed(2)}
+                        €{subtotal.toFixed(2)}
                       </span>
                     </div>
                     {itemDiscount > 0 && (
@@ -745,6 +758,7 @@ export default function CheckoutPage() {
                         <span>-€{couponDiscount.toFixed(2)}</span>
                       </div>
                     )}
+                    <hr className="border-gray-100" />
                     {Object.entries(vatByRate).map(([rate, vat]) => (
                       <div key={rate} className="flex justify-between">
                         <span>VAT {rate}%{rate === '12' ? ' (Food)' : ' (Drinks)'}</span>
