@@ -35,34 +35,37 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
   // Load user cart from database and merge with guest cart
   const loadUserCart = async () => {
     try {
-      const dbItems = (await cartService.getCart()) || [];
+      // Clear guest cart FIRST to prevent race condition with sync effect
       const savedGuestCart = localStorage.getItem("guest_cart");
-      let mergedItems = [...dbItems];
-      let hasMerged = false;
-
+      let guestItems: CartItem[] = [];
       if (savedGuestCart) {
         try {
-          const guestItems: CartItem[] = JSON.parse(savedGuestCart);
-          if (Array.isArray(guestItems) && guestItems.length > 0) {
-            guestItems.forEach((guestItem) => {
-              const existingIdx = mergedItems.findIndex(
-                (dbItem) => dbItem.id === guestItem.id,
-              );
-              if (existingIdx > -1) {
-                mergedItems[existingIdx] = {
-                  ...mergedItems[existingIdx],
-                  qty: mergedItems[existingIdx].qty + guestItem.qty,
-                };
-              } else {
-                mergedItems.push(guestItem);
-              }
-            });
-            hasMerged = true;
-            localStorage.removeItem("guest_cart");
-          }
+          guestItems = JSON.parse(savedGuestCart);
+          localStorage.removeItem("guest_cart");
         } catch (e) {
           console.error("Failed to parse guest cart:", e);
         }
+      }
+
+      const dbItems = (await cartService.getCart()) || [];
+      let mergedItems = [...dbItems];
+      let hasMerged = false;
+
+      if (Array.isArray(guestItems) && guestItems.length > 0) {
+        guestItems.forEach((guestItem) => {
+          const existingIdx = mergedItems.findIndex(
+            (dbItem) => dbItem.id === guestItem.id,
+          );
+          if (existingIdx > -1) {
+            mergedItems[existingIdx] = {
+              ...mergedItems[existingIdx],
+              qty: mergedItems[existingIdx].qty + guestItem.qty,
+            };
+          } else {
+            mergedItems.push(guestItem);
+          }
+        });
+        hasMerged = true;
       }
 
       setCartItems(mergedItems);
@@ -155,10 +158,13 @@ export const CartProvider = ({children}: {children: React.ReactNode}) => {
     setCartItems([]);
   };
 
-  const cartTotal = cartItems.reduce(
-    (total, item) => total + item.price * item.qty,
-    0,
-  );
+  const DEFAULT_VAT_RATE = 12;
+
+  const cartTotal = cartItems.reduce((total, item) => {
+    const price = Number(item.price) || 0;
+    const vatRate = item.vatRate ?? DEFAULT_VAT_RATE;
+    return total + price * item.qty * (1 + vatRate / 100);
+  }, 0);
 
   return (
     <CartContext.Provider

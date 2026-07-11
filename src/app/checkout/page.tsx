@@ -28,6 +28,10 @@ import { toast } from "react-toastify";
 const RESTAURANT_ID = 1;
 const DEFAULT_VAT_RATE = 12;
 
+const getPriceWithVat = (price: number, vatRate?: number): number => {
+  return price * (1 + (vatRate ?? DEFAULT_VAT_RATE) / 100);
+};
+
 interface Address {
   id?: string;
   lat: number;
@@ -642,10 +646,10 @@ export default function CheckoutPage() {
                               item.originalPrice > item.price ? (
                                 <>
                                   <span className="text-[9px] text-gray-400 line-through">
-                                    €{item.originalPrice.toFixed(2)}
+                                    €{getPriceWithVat(item.originalPrice, item.vatRate).toFixed(2)}
                                   </span>
                                   <span className="text-[10px] text-[var(--primary-color)] font-bold">
-                                    €{item.price.toFixed(2)} each
+                                    €{getPriceWithVat(item.price, item.vatRate).toFixed(2)} each
                                   </span>
                                   <span className="text-[8px] font-black text-green-700 bg-green-100/50 px-1.5 py-0.5 rounded-md tracking-wider">
                                     {Math.round(
@@ -657,7 +661,7 @@ export default function CheckoutPage() {
                                   </span>
                                 </>
                               ) : (
-                                <span className="text-[10px] text-gray-400">€{item.price.toFixed(2)} each</span>
+                                <span className="text-[10px] text-gray-400">€{getPriceWithVat(item.price, item.vatRate).toFixed(2)} each</span>
                               )}
                             </div>
                           </div>
