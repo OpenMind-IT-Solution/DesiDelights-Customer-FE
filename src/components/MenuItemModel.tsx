@@ -13,6 +13,12 @@ type Props = {
   onClose: () => void;
 };
 
+const DEFAULT_VAT_RATE = 12;
+
+const getPriceWithVat = (price: number, vatRate?: number, priceWithVat?: number): number => {
+  return priceWithVat ?? price * (1 + (vatRate ?? DEFAULT_VAT_RATE) / 100);
+};
+
 const getPriceDetails = (price: number, offer?: string) => {
   if (!offer) return { originalPrice: price, finalPrice: price, hasDiscount: false };
   
@@ -99,15 +105,15 @@ const MenuItemModal = ({item, onClose}: Props) => {
               {hasDiscount ? (
                 <>
                   <span className="text-gray-400 line-through text-sm font-semibold">
-                    €{item.price.toFixed(2)}
+                    €{getPriceWithVat(item.price, item.vatRate, item.priceWithVat).toFixed(2)}
                   </span>
                   <span className="text-lg font-semibold text-[var(--primary-color)]">
-                    €{discountedPrice.toFixed(2)}
+                    €{getPriceWithVat(discountedPrice, item.vatRate).toFixed(2)}
                   </span>
                 </>
               ) : (
                 <span className="text-lg font-semibold text-[var(--primary-color)]">
-                  €{item.price.toFixed(2)}
+                  €{getPriceWithVat(item.price, item.vatRate, item.priceWithVat).toFixed(2)}
                 </span>
               )}
             </div>
@@ -151,7 +157,7 @@ const MenuItemModal = ({item, onClose}: Props) => {
           onClick={handleAddToCart}
           className="w-full bg-[var(--primary-color)] text-white py-4 rounded-full font-semibold text-lg hover:opacity-90 transition"
         >
-          Add to Cart - €{totalPrice}
+          Add to Cart - €{getPriceWithVat(discountedPrice * qty, item.vatRate).toFixed(2)}
         </button>
       </div>
     </div>
