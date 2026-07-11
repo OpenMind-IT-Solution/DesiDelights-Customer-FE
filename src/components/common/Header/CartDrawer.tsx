@@ -22,19 +22,27 @@ const CartDrawer = ({show, onClose}: Props) => {
     "delivery",
   );
 
+  const DEFAULT_VAT_RATE = 12;
+
+  const getPriceWithVat = (price: number, vatRate?: number): number => {
+    return price * (1 + (vatRate ?? DEFAULT_VAT_RATE) / 100);
+  };
+
   if (!show) return null;
 
-  const subtotal = cartItems.reduce(
+  const netSubtotal = cartItems.reduce(
     (acc, item) => acc + item.price * item.qty,
     0,
   );
 
-  const originalSubtotal = cartItems.reduce(
-    (acc, item) => acc + (item.originalPrice || item.price) * item.qty,
-    0,
-  );
+  const vatByRate: Record<number, number> = {};
+  cartItems.forEach(item => {
+    const rate = item.vatRate ?? DEFAULT_VAT_RATE;
+    vatByRate[rate] = (vatByRate[rate] || 0) + item.price * item.qty * rate / 100;
+  });
 
-  const totalDiscount = originalSubtotal - subtotal;
+  const totalVat = Object.values(vatByRate).reduce((s, v) => s + v, 0);
+  const subtotal = netSubtotal + totalVat;
 
   return (
     <>
@@ -75,10 +83,10 @@ const CartDrawer = ({show, onClose}: Props) => {
                   {item.originalPrice && item.originalPrice > item.price ? (
                     <>
                       <span className="text-xs text-gray-400 line-through">
-                        €{item.originalPrice.toFixed(2)}
+                        €{getPriceWithVat(item.originalPrice, item.vatRate).toFixed(2)}
                       </span>
                       <span className="text-sm font-bold text-[var(--primary-color)]">
-                        €{item.price.toFixed(2)}
+                        €{getPriceWithVat(item.price, item.vatRate).toFixed(2)}
                       </span>
                       <span className="text-[9px] font-black text-green-700 bg-green-100/60 px-1.5 py-0.5 rounded-md tracking-wider">
                         {Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)}% OFF
@@ -86,7 +94,7 @@ const CartDrawer = ({show, onClose}: Props) => {
                     </>
                   ) : (
                     <span className="text-sm text-gray-500 font-medium">
-                      €{item.price.toFixed(2)}
+                      €{getPriceWithVat(item.price, item.vatRate).toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -122,28 +130,23 @@ const CartDrawer = ({show, onClose}: Props) => {
           ))}
         </div>
         <div className="p-5 border-t bg-gray-50/20">
-          {totalDiscount > 0 ? (
-            <div className="space-y-2.5 mb-5 text-sm text-gray-600">
-              <div className="flex justify-between font-medium">
-                <span>Subtotal</span>
-                <span>€{originalSubtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-green-600 font-semibold">
-                <span>Discount</span>
-                <span>-€{totalDiscount.toFixed(2)}</span>
-              </div>
-              <hr className="border-gray-100/60" />
-              <div className="flex justify-between font-bold text-base text-gray-800 pt-1">
-                <span>Total</span>
-                <span className="text-[var(--primary-color)]">€{subtotal.toFixed(2)}</span>
-              </div>
+          <div className="space-y-2 mb-5 text-sm text-gray-600">
+            <div className="flex justify-between">
+              <span>Net Price</span>
+              <span className="font-semibold text-gray-800">€{netSubtotal.toFixed(2)}</span>
             </div>
-          ) : (
-            <div className="flex justify-between mb-4 font-bold text-gray-800">
+            {Object.entries(vatByRate).map(([rate, vat]) => (
+              <div key={rate} className="flex justify-between">
+                <span>VAT {rate}%{rate === '12' ? ' (Food)' : ' (Drinks)'}</span>
+                <span className="font-semibold text-gray-800">€{vat.toFixed(2)}</span>
+              </div>
+            ))}
+            <hr className="border-gray-100" />
+            <div className="flex justify-between font-bold text-gray-800">
               <span>Subtotal</span>
-              <span className="text-[var(--primary-color)] font-extrabold">€{subtotal.toFixed(2)}</span>
+              <span className="text-[var(--primary-color)]">€{subtotal.toFixed(2)}</span>
             </div>
-          )}
+          </div>
 
           <button
             onClick={() => {
