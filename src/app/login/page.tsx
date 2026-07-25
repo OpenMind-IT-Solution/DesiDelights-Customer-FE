@@ -69,8 +69,6 @@ export default function LoginPage() {
     return cleaned;
   };
 
-  const phoneRegex = /^(?:\+|00)?[1-9]\d{7,14}$/;
-
   const normalizeCountryCode = (value: string) => {
     const cleaned = value.replace(/[^\d+]/g, "");
     const digitsOnly = cleaned.replace(/\+/g, "");
@@ -82,6 +80,8 @@ export default function LoginPage() {
     flag: "🌍",
     name: "Custom code",
     label: "Custom",
+    minLength: 9,
+    maxLength: 15,
   };
 
   const handleLogin = async (e?: React.FormEvent) => {
@@ -143,10 +143,11 @@ export default function LoginPage() {
     const normalizedPhone = normalizePhone(fullNumber).trim();
     const newErrors: Record<string, string> = {};
 
+    const localDigits = guestPhoneNumber.replace(/\D/g, "").length;
     if (!guestPhoneNumber) {
       newErrors.guestPhone = "Phone field is required.";
-    } else if (!phoneRegex.test(normalizedPhone)) {
-      newErrors.guestPhone = "Please enter a valid phone number with country code.";
+    } else if (localDigits < selectedGuestCountry.minLength || localDigits > selectedGuestCountry.maxLength) {
+      newErrors.guestPhone = `Please enter ${selectedGuestCountry.minLength}${selectedGuestCountry.minLength !== selectedGuestCountry.maxLength ? `-${selectedGuestCountry.maxLength}` : ""} digits for ${selectedGuestCountry.name}.`;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -344,7 +345,7 @@ export default function LoginPage() {
                       setGuestPhoneNumber(normalizePhone(e.target.value.replace(/^\+/, "")));
                       setErrors((prev) => ({ ...prev, guestPhone: "", general: "" }));
                     }}
-                    maxLength={10}
+                    maxLength={selectedGuestCountry.maxLength}
                     className="flex-1 px-4 py-3 outline-none"
                   />
                 </div>

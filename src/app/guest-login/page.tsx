@@ -27,6 +27,8 @@ export default function GuestLogin() {
     flag: "🌍",
     name: "Custom code",
     label: "Custom",
+    minLength: 9,
+    maxLength: 15,
   };
 
   const filtered = useMemo(
@@ -65,8 +67,6 @@ export default function GuestLogin() {
     return cleaned;
   };
 
-  const phoneRegex = /^(?:\+|00)?[1-9]\d{7,14}$/;
-
   if (isLoading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5f6f8]">
@@ -80,13 +80,14 @@ export default function GuestLogin() {
 
     const fullNumber = countryCode + mobile;
     const normalizedMobile = normalizePhone(fullNumber).trim();
+    const localDigits = mobile.replace(/\D/g, "").length;
     if (!mobile) {
       toast.error("Please enter your mobile number.");
       return;
     }
 
-    if (!phoneRegex.test(normalizedMobile)) {
-      toast.error("Please enter a valid phone number.");
+    if (localDigits < current.minLength || localDigits > current.maxLength) {
+      toast.error(`Please enter ${current.minLength}${current.minLength !== current.maxLength ? `-${current.maxLength}` : ""} digits for ${current.name}.`);
       return;
     }
 
@@ -186,13 +187,15 @@ export default function GuestLogin() {
                 setMobile(nm);
               }}
               required
-              maxLength={10}
+              maxLength={current.maxLength}
               className="flex-1 px-4 py-3 outline-none"
             />
           </div>
 
-          {!phoneRegex.test(normalizePhone(countryCode + mobile).trim()) && mobile.length > 0 && (
-            <p className="text-xs text-red-600 mb-3 -mt-4">Please enter a valid phone number.</p>
+          {mobile.length > 0 && (mobile.replace(/\D/g, "").length < current.minLength || mobile.replace(/\D/g, "").length > current.maxLength) && (
+            <p className="text-xs text-red-600 mb-3 -mt-4">
+              Please enter {current.minLength}{current.minLength !== current.maxLength ? `-${current.maxLength}` : ""} digits for {current.name}.
+            </p>
           )}
 
           <button
