@@ -67,8 +67,9 @@ const ClosedAnnouncementBar = () => {
         return `${h}:00`;
       };
 
+      const backLabel = offset === 0 ? "today" : next.dayName;
       setMessage(
-        `We are closed now! We'll be back ${next.dayName} at ${fmtHour(nextOpenHour)}. Thank you for your patience.`
+        `We are closed now! We'll be back ${backLabel} at ${fmtHour(nextOpenHour)}. Thank you for your patience.`
       );
     };
 
