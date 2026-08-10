@@ -51,7 +51,8 @@ const FeaturedItems = ({ categoryId = "all", title, hideTitle = false, limit, co
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const data = await websiteService.getMenuItems();
+        // Fetch top priority items (the API returns items ordered by priority ascending)
+        const data = await websiteService.getMenuItems({ limit: 12 });
         setFeaturedItems(data);
       } catch (error) {
         console.error("Failed to fetch featured items:", error);
